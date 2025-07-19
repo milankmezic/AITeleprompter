@@ -46,7 +46,7 @@ A modern, intelligent teleprompter application that uses AI-powered speech recog
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/AITeleprompter.git
+   git clone https://github.com/milankmezic/AITeleprompter.git
    cd AITeleprompter
    ```
 
@@ -141,13 +141,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU AFFERO GENERAL  - see the [LICENSE](LICENSE) file for details.
+
 
 ## 👨‍💻 Author
 
 **Milan Kmezic**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
+- GitHub: [@milankmezic](https://github.com/milankmezic)
+- LinkedIn: [Milan Kmezic](https://www.linkedin.com/in/milankmezic/)
 
 ## 🙏 Acknowledgments
 
@@ -157,12 +158,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📈 Roadmap
 
-- [ ] **Cloud Sync** - Sync scripts across devices
-- [ ] **Team Collaboration** - Share scripts with team members
-- [ ] **Voice Training** - Improve recognition accuracy
-- [ ] **Export Options** - PDF, Word, and other formats
-- [ ] **Advanced Analytics** - Detailed performance insights
-- [ ] **Mobile Apps** - Native iOS and Android versions
+- [ ] **Font Size Control** - Adjustable text size for better readability
+- [ ] **External Script Loading** - Load scripts from URLs or external sources
+- [ ] **Detailed Analytics** - Enhanced performance metrics and speech patterns analysis
 
 ## 🐛 Bug Reports
 
