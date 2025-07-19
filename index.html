@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Teleprompter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      /* Light Mode Colors */
+      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --text-color: white;
+      --glass-bg: rgba(255,255,255,0.1);
+      --glass-border: rgba(255,255,255,0.2);
+      --glass-hover: rgba(255,255,255,0.2);
+      --button-bg: rgba(255,255,255,0.2);
+      --button-border: white;
+      --button-hover-bg: white;
+      --button-hover-color: #667eea;
+      --teleprompter-bg: #f0f0f0;
+      --teleprompter-color: #333;
+      --current-word-bg: #4CAF50;
+      --current-word-color: white;
+      --missed-word-bg: #f44336;
+      --missed-word-color: white;
+      --mismatched-word-bg: transparent;
+      --mismatched-word-color: inherit;
+      --floating-btn-bg: #667eea;
+      --floating-btn-hover: #764ba2;
+      --textarea-bg: rgba(255,255,255,0.9);
+      --textarea-color: #333;
+      --back-btn-bg: rgba(255,255,255,0.2);
+      --back-btn-border: rgba(255,255,255,0.3);
+      --back-btn-hover: rgba(255,255,255,0.3);
+    }
+
+    [data-theme="dark"] {
+      /* Dark Mode Colors */
+      --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+      --text-color: white;
+      --glass-bg: rgba(255,255,255,0.1);
+      --glass-border: rgba(255,255,255,0.2);
+      --glass-hover: rgba(255,255,255,0.2);
+      --button-bg: rgba(255,255,255,0.2);
+      --button-border: white;
+      --button-hover-bg: white;
+      --button-hover-color: #2c3e50;
+      --teleprompter-bg: #1a1a1a;
+      --teleprompter-color: #e0e0e0;
+      --current-word-bg: #27ae60;
+      --current-word-color: white;
+      --missed-word-bg: #e74c3c;
+      --missed-word-color: white;
+      --mismatched-word-bg: transparent;
+      --mismatched-word-color: inherit;
+      --floating-btn-bg: #3498db;
+      --floating-btn-hover: #2980b9;
+      --textarea-bg: rgba(255,255,255,0.9);
+      --textarea-color: #333;
+      --back-btn-bg: rgba(255,255,255,0.2);
+      --back-btn-border: rgba(255,255,255,0.3);
+      --back-btn-hover: rgba(255,255,255,0.3);
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-color);
+      overflow: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        overflow: auto;
+      }
+    }
+
+    .screen {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #settings-screen.active {
+      justify-content: flex-start;
+      align-items: stretch;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    /* Splash Screen */
+    #splash-screen {
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 4rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 3rem;
+      opacity: 0.9;
+    }
+
+    .github-link {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.8;
+      transition: opacity 0.3s ease;
+    }
+
+    .github-link:hover {
+      opacity: 1;
+    }
+
+    .github-link a {
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .github-link a:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn {
+      background: var(--button-bg);
+      border: 2px solid var(--button-border);
+      color: var(--text-color);
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .btn:hover {
+      background: var(--button-hover-bg);
+      color: var(--button-hover-color);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* Settings Screen */
+    #settings-screen {
+      max-width: 1200px;
+      width: 100%;
+      min-height: 100vh;
+      padding: 2rem;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+
+    .settings-container {
+      background: var(--glass-bg);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      min-height: calc(100vh - 4rem);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .settings-content {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 2rem;
+      flex: 1;
+      align-items: start;
+      margin-bottom: 2rem;
+    }
+
+    .settings-left {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .settings-right {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .settings-header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .settings-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .settings-subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: var(--textarea-bg);
+      color: var(--textarea-color);
+      font-size: 1rem;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .settings-right textarea {
+      min-height: 500px;
+      resize: none;
+    }
+
+    textarea:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .settings-left .btn-group {
+      margin-top: auto;
+      padding-top: 2rem;
+    }
+
+    .settings-footer {
+      text-align: center;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .version-link {
+      color: var(--text-color);
+      text-decoration: none;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+    }
+
+    .version-link:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .btn-secondary {
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--glass-hover);
+      color: var(--text-color);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .theme-toggle input[type="checkbox"] {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      appearance: none;
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .theme-toggle input[type="checkbox"]:before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      background: var(--text-color);
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    .theme-toggle input[type="checkbox"]:checked:before {
+      transform: translateX(24px);
+    }
+
+    .theme-toggle input[type="checkbox"]:checked {
+      background: var(--button-bg);
+      border-color: var(--button-border);
+    }
+
+    .theme-toggle label {
+      font-size: 1rem;
+      cursor: pointer;
+      margin-bottom: 0;
+    }
+
+    /* Scroll Position Selector */
+    .scroll-position-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .scroll-position-group label {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .scroll-position-group select {
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 10px;
+      background: var(--textarea-bg);
+      color: var(--textarea-color);
+      font-size: 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .scroll-position-group select:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+    }
+
+    .scroll-position-group select:hover {
+      background: var(--glass-hover);
+    }
+
+    .scroll-position-group select option {
+      background: var(--teleprompter-bg);
+      color: var(--teleprompter-color);
+    }
+
+    /* Teleprompter Screen */
+    #teleprompter-screen {
+      background: var(--teleprompter-bg);
+      color: var(--teleprompter-color);
+      padding: 0;
+      justify-content: flex-start;
+    }
+
+    #teleprompter {
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 5rem 2rem 2rem 2rem;
+      line-height: 1.6;
+      font-size: 2rem;
+      background: var(--teleprompter-bg);
+      color: var(--teleprompter-color);
+      scroll-padding-top: 2rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--glass-border) transparent;
+    }
+
+    #teleprompter::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #teleprompter::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #teleprompter::-webkit-scrollbar-thumb {
+      background: var(--glass-border);
+      border-radius: 4px;
+    }
+
+    #teleprompter::-webkit-scrollbar-thumb:hover {
+      background: var(--glass-hover);
+    }
+
+    #teleprompter span {
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      background: transparent;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    #teleprompter span.current {
+      background: var(--current-word-bg);
+      color: var(--current-word-color);
+    }
+
+    #teleprompter span.missed {
+      background: var(--missed-word-bg);
+      color: var(--missed-word-color);
+    }
+
+    #teleprompter span.mismatched {
+      background: var(--mismatched-word-bg);
+      color: var(--mismatched-word-color);
+    }
+
+    .floating-start-btn {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--floating-btn-bg);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .floating-start-btn:hover {
+      background: var(--floating-btn-hover);
+      transform: translateX(-50%) translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    }
+
+    .floating-start-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 2rem;
+      left: 2rem;
+      background: var(--back-btn-bg);
+      border: 1px solid var(--back-btn-border);
+      color: var(--text-color);
+      padding: 0.5rem 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .back-btn:hover {
+      background: var(--back-btn-hover);
+    }
+
+    .error-message {
+      background: rgba(255,0,0,0.1);
+      border: 1px solid rgba(255,0,0,0.3);
+      color: #ff6b6b;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    /* Analysis Modal */
+    .analysis-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      backdrop-filter: blur(5px);
+    }
+
+    .analysis-modal.active {
+      display: flex;
+    }
+
+    .analysis-content {
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      backdrop-filter: blur(20px);
+      color: var(--text-color);
+    }
+
+    .analysis-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .analysis-title {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .analysis-subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--button-bg);
+      border: 2px solid var(--button-border);
+      border-radius: 15px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .accuracy-bar {
+      background: var(--glass-bg);
+      border-radius: 10px;
+      height: 20px;
+      margin: 1rem 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .accuracy-fill {
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      height: 100%;
+      transition: width 0.8s ease;
+      position: relative;
+    }
+
+    .accuracy-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .analysis-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .modal-btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .modal-btn.primary {
+      background: var(--floating-btn-bg);
+      color: white;
+    }
+
+    .modal-btn.primary:hover {
+      background: var(--floating-btn-hover);
+      transform: translateY(-2px);
+    }
+
+    .modal-btn.secondary {
+      background: var(--button-bg);
+      color: var(--text-color);
+      border: 2px solid var(--button-border);
+    }
+
+    .modal-btn.secondary:hover {
+      background: var(--button-hover-bg);
+      color: var(--button-hover-color);
+    }
+
+    @media (max-width: 768px) {
+      .logo {
+        font-size: 3rem;
+      }
+      
+      .subtitle {
+        font-size: 1.2rem;
+      }
+      
+      #teleprompter {
+        font-size: 1.5rem;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .analysis-title {
+        font-size: 2rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      }
+      
+      .stat-number {
+        font-size: 2rem;
+      }
+      
+      .analysis-actions {
+        flex-direction: column;
+      }
+      
+      .settings-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      #settings-screen {
+        padding: 1rem;
+        min-height: 100vh;
+        height: auto;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      #settings-screen.active {
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      .settings-container {
+        padding: 1rem;
+        min-height: auto;
+        height: auto;
+        flex: none;
+      }
+      
+      .settings-left {
+        order: 2;
+      }
+      
+      .settings-right {
+        order: 1;
+        flex: 1;
+        margin-bottom: 2rem;
+      }
+      
+      .settings-right textarea {
+        min-height: 250px;
+        height: 40vh;
+        max-height: 400px;
+      }
+      
+      .settings-left .btn-group {
+        margin-top: 1rem;
+        padding-top: 1rem;
+      }
+      
+      .github-link {
+        position: static;
+        transform: none;
+        margin-top: 2rem;
+      }
+      
+      .github-link a {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="splash-screen" class="screen active">
+    <div class="logo">📺 AI Teleprompter</div>
+    <div class="subtitle">Professional speech assistance powered by AI</div>
+    <button class="btn" onclick="showSettings()">Get Started</button>
+    
+    <div class="github-link">
+      <a href="https://github.com/milankmezic/AITeleprompter" target="_blank" rel="noopener noreferrer">
+        🔗 Get Latest Version on GitHub
+      </a>
+    </div>
+  </div>
+
+  <!-- Settings Screen -->
+  <div id="settings-screen" class="screen">
+    <div class="settings-container">
+      <div class="settings-header">
+        <h2 class="settings-title">Setup Your Script</h2>
+        <p class="settings-subtitle">Configure your teleprompter settings and enter your script</p>
+        <div id="error-container"></div>
+      </div>
+      
+      <div class="settings-content">
+        <div class="settings-left">
+          <div class="form-group">
+            <div class="theme-toggle">
+              <label for="theme-toggle">🌙 Dark Mode</label>
+              <input type="checkbox" id="theme-toggle" />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <div class="theme-toggle">
+              <label for="highlight-toggle">🎨 Word Highlights</label>
+              <input type="checkbox" id="highlight-toggle" checked />
+            </div>
+            <small style="opacity: 0.8; font-size: 0.9rem; margin-top: 0.25rem; display: block;">
+              Show red highlights for missed words
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <div class="scroll-position-group">
+              <label for="scroll-position">Current Word Position:</label>
+              <select id="scroll-position">
+                <option value="top">📄 Top of Screen</option>
+                <option value="middle" selected>🎯 Center of Screen</option>
+                <option value="bottom">📋 Bottom of Screen</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="btn-group">
+            <button class="btn btn-secondary" onclick="showSplash()">Back</button>
+            <button class="btn" onclick="startTeleprompter()">Start Teleprompter</button>
+          </div>
+          
+          <div class="settings-footer">
+            <a href="https://github.com/milankmezic/AITeleprompter" target="_blank" rel="noopener noreferrer" class="version-link">
+              📱 Get Latest Version
+            </a>
+          </div>
+        </div>
+        
+        <div class="settings-right">
+          <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
+            <label for="script-text">Your Script:</label>
+            <textarea 
+              id="script-text" 
+              placeholder="Enter your script here... The teleprompter will follow your speech and highlight words as you speak them."
+              style="flex: 1; min-height: 400px;"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teleprompter Screen -->
+  <div id="teleprompter-screen" class="screen">
+    <button class="back-btn" onclick="showSettings()">← Back to Settings</button>
+  <div id="teleprompter"></div>
+    <button id="startBtn" class="floating-start-btn">Start Speaking</button>
+  </div>
+
+  <!-- Analysis Modal -->
+  <div id="analysis-modal" class="analysis-modal">
+    <div class="analysis-content">
+      <div class="analysis-header">
+        <h2 class="analysis-title">
+          <span>📊</span>
+          <span>Speech Analysis</span>
+        </h2>
+        <p class="analysis-subtitle">Your teleprompter performance summary</p>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" id="total-words">0</span>
+          <span class="stat-label">Total Words</span>
+        </div>
+        
+        <div class="stat-card">
+          <span class="stat-number" id="correct-words">0</span>
+          <span class="stat-label">Correct Words</span>
+        </div>
+        
+        <div class="stat-card">
+          <span class="stat-number" id="missed-words">0</span>
+          <span class="stat-label">Missed Words</span>
+        </div>
+      </div>
+      
+      <div class="accuracy-bar">
+        <div class="accuracy-fill" id="accuracy-fill">
+          <div class="accuracy-text" id="accuracy-text">0%</div>
+        </div>
+      </div>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number" id="reading-time">0:00</span>
+          <span class="stat-label">Reading Time</span>
+        </div>
+        
+        <div class="stat-card">
+          <span class="stat-number" id="reading-speed">0</span>
+          <span class="stat-label">Words per Minute</span>
+        </div>
+      </div>
+      
+      <div class="analysis-actions">
+        <button class="modal-btn secondary" onclick="closeAnalysis()">Close</button>
+        <button class="modal-btn primary" onclick="restartTeleprompter()">Read Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Local storage keys
+    const STORAGE_KEY = 'teleprompter_script';
+    const THEME_KEY = 'teleprompter_theme';
+    const SCROLL_POSITION_KEY = 'teleprompter_scroll_position';
+    const HIGHLIGHT_KEY = 'teleprompter_highlight_enabled';
+    
+    // Global variables
+    let currentScreen = 'splash';
+    let currentWordIndex = 0;
+    let words = [];
+    let recognition = null;
+    let spokenWords = [];
+    let isListening = false;
+    let scrollingInterval = null;
+    let scrollPosition = 'middle'; // 'top', 'middle', 'bottom'
+    let isManualScrolling = false;
+    let manualScrollTimeout = null;
+    let highlightEnabled = true;
+    
+    // Speech analysis variables
+    let speechStats = {
+      totalWords: 0,
+      correctWords: 0,
+      missedWords: 0,
+      mismatchedWords: 0,
+      startTime: null,
+      endTime: null
+    };
+
+    // Screen navigation
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.remove('active');
+      });
+      document.getElementById(screenId + '-screen').classList.add('active');
+      currentScreen = screenId;
+    }
+
+    function showSplash() {
+      showScreen('splash');
+    }
+
+    function showSettings() {
+      showScreen('settings');
+      loadScript();
+      loadScrollPosition();
+      loadHighlightEnabled();
+      
+      // Set up theme toggle if not already done
+      const themeToggle = document.getElementById('theme-toggle');
+      if (themeToggle && !themeToggle.hasAttribute('data-listener')) {
+        themeToggle.addEventListener('change', toggleTheme);
+        themeToggle.setAttribute('data-listener', 'true');
+      }
+      
+      // Set up highlight toggle if not already done
+      const highlightToggle = document.getElementById('highlight-toggle');
+      if (highlightToggle && !highlightToggle.hasAttribute('data-listener')) {
+        highlightToggle.addEventListener('change', updateHighlightEnabled);
+        highlightToggle.setAttribute('data-listener', 'true');
+      }
+      
+      // Set up scroll position selector if not already done
+      const scrollSelect = document.getElementById('scroll-position');
+      if (scrollSelect && !scrollSelect.hasAttribute('data-listener')) {
+        scrollSelect.addEventListener('change', updateScrollPosition);
+        scrollSelect.setAttribute('data-listener', 'true');
+      }
+    }
+
+    function showTeleprompter() {
+      showScreen('teleprompter');
+    }
+
+    // Local storage functions
+    function saveScript(text) {
+      localStorage.setItem(STORAGE_KEY, text);
+    }
+
+    function loadScript() {
+      const savedScript = localStorage.getItem(STORAGE_KEY);
+      if (savedScript) {
+        document.getElementById('script-text').value = savedScript;
+      }
+    }
+
+    // Theme functions
+    function getSystemTheme() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function getSavedTheme() {
+      return localStorage.getItem(THEME_KEY) || getSystemTheme();
+    }
+
+    function saveTheme(theme) {
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      const themeToggle = document.getElementById('theme-toggle');
+      if (themeToggle) {
+        themeToggle.checked = theme === 'dark';
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(newTheme);
+      saveTheme(newTheme);
+    }
+
+    // Scroll position functions
+    function saveScrollPosition(position) {
+      localStorage.setItem(SCROLL_POSITION_KEY, position);
+      scrollPosition = position;
+    }
+
+    function loadScrollPosition() {
+      const savedPosition = localStorage.getItem(SCROLL_POSITION_KEY) || 'middle';
+      scrollPosition = savedPosition;
+      const scrollSelect = document.getElementById('scroll-position');
+      if (scrollSelect) {
+        scrollSelect.value = savedPosition;
+      }
+    }
+
+    function updateScrollPosition() {
+      const scrollSelect = document.getElementById('scroll-position');
+      if (scrollSelect) {
+        saveScrollPosition(scrollSelect.value);
+      }
+    }
+
+    // Highlight functions
+    function saveHighlightEnabled(enabled) {
+      localStorage.setItem(HIGHLIGHT_KEY, enabled.toString());
+      highlightEnabled = enabled;
+    }
+
+    function loadHighlightEnabled() {
+      const saved = localStorage.getItem(HIGHLIGHT_KEY);
+      highlightEnabled = saved === null ? true : saved === 'true';
+      console.log('Highlight enabled:', highlightEnabled);
+      const highlightToggle = document.getElementById('highlight-toggle');
+      if (highlightToggle) {
+        highlightToggle.checked = highlightEnabled;
+      }
+    }
+
+    function updateHighlightEnabled() {
+      const highlightToggle = document.getElementById('highlight-toggle');
+      if (highlightToggle) {
+        saveHighlightEnabled(highlightToggle.checked);
+        
+        // If highlighting is disabled, clear existing highlights
+        if (!highlightToggle.checked) {
+          clearHighlights();
+        }
+      }
+    }
+
+    // Clear all missed and mismatched highlights (but keep current word highlight)
+    function clearHighlights() {
+      document.querySelectorAll('#teleprompter span').forEach(span => {
+        span.classList.remove('missed', 'mismatched');
+        // Also clear inline styles
+        span.style.backgroundColor = '';
+        span.style.color = '';
+      });
+    }
+
+    // Clear mismatched highlights from a specific position forward (when user goes back to repeat)
+    function clearMismatchedHighlightsForward(fromIndex) {
+      let clearedCount = 0;
+      for (let i = fromIndex; i < currentWordIndex; i++) {
+        const target = document.getElementById('w' + i);
+        if (target && target.classList.contains('mismatched')) {
+          target.classList.remove('mismatched');
+          // Clear inline styles if any
+          if (target.style.backgroundColor && target.style.backgroundColor !== 'rgb(244, 67, 54)') {
+            target.style.backgroundColor = '';
+            target.style.color = '';
+          }
+          clearedCount++;
+          console.log('Cleared mismatched highlight for word:', i, target.textContent);
+        }
+      }
+      
+      // Adjust statistics - remove cleared mismatched words from count
+      speechStats.mismatchedWords = Math.max(0, speechStats.mismatchedWords - clearedCount);
+      
+      if (clearedCount > 0) {
+        console.log('Cleared', clearedCount, 'mismatched highlights from position', fromIndex, 'forward');
+      }
+    }
+
+    // Initialize speech statistics
+    function initializeSpeechStats() {
+      speechStats = {
+        totalWords: words.length,
+        correctWords: 0,
+        missedWords: 0,
+        mismatchedWords: 0,
+        startTime: new Date(),
+        endTime: null
+      };
+    }
+
+    // Update button based on progress
+    function updateStartButton() {
+      const startBtn = document.getElementById('startBtn');
+      if (currentWordIndex >= words.length) {
+        // Reached the end
+        if (speechStats.endTime === null) {
+          speechStats.endTime = new Date();
+        }
+        startBtn.textContent = 'View Analysis';
+        startBtn.disabled = false;
+      } else if (isListening) {
+        startBtn.textContent = 'Pause Listening';
+        startBtn.disabled = false;
+      } else {
+        startBtn.textContent = 'Start Speaking';
+        startBtn.disabled = false;
+      }
+    }
+
+    // Show analysis modal
+    function showAnalysis() {
+      // Calculate statistics
+      const totalTime = speechStats.endTime - speechStats.startTime;
+      const minutes = Math.floor(totalTime / 60000);
+      const seconds = Math.floor((totalTime % 60000) / 1000);
+      const readingTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      
+      // Calculate correct words as total minus only missed words (mismatched words count as correct)
+      speechStats.correctWords = speechStats.totalWords - speechStats.missedWords;
+      
+      const accuracy = speechStats.totalWords > 0 ? Math.round((speechStats.correctWords / speechStats.totalWords) * 100) : 0;
+      const wordsPerMinute = totalTime > 0 ? Math.round((speechStats.totalWords / totalTime) * 60000) : 0;
+      
+      // Update modal content
+      document.getElementById('total-words').textContent = speechStats.totalWords;
+      document.getElementById('correct-words').textContent = speechStats.correctWords;
+      document.getElementById('missed-words').textContent = speechStats.missedWords;
+      document.getElementById('reading-time').textContent = readingTime;
+      document.getElementById('reading-speed').textContent = wordsPerMinute;
+      
+      // Update accuracy bar
+      const accuracyFill = document.getElementById('accuracy-fill');
+      const accuracyText = document.getElementById('accuracy-text');
+      accuracyFill.style.width = accuracy + '%';
+      accuracyText.textContent = accuracy + '%';
+      
+      // Show modal
+      document.getElementById('analysis-modal').classList.add('active');
+    }
+
+    // Close analysis modal
+    function closeAnalysis() {
+      document.getElementById('analysis-modal').classList.remove('active');
+    }
+
+    // Restart teleprompter
+    function restartTeleprompter() {
+      closeAnalysis();
+      currentWordIndex = 0;
+      isListening = false;
+      stopContinuousScrolling();
+      
+      // Clear all highlights
+      document.querySelectorAll('#teleprompter span').forEach(s => {
+        s.classList.remove('current', 'missed', 'mismatched');
+      });
+      
+      // Reset statistics
+      initializeSpeechStats();
+      
+      // Update button and highlight first word
+      updateStartButton();
+      highlightCurrentWord();
+    }
+
+    // Error handling
+    function showError(message) {
+      const errorContainer = document.getElementById('error-container');
+      errorContainer.innerHTML = `<div class="error-message">${message}</div>`;
+      setTimeout(() => {
+        errorContainer.innerHTML = '';
+      }, 5000);
+    }
+
+    // Teleprompter functions
+    function startTeleprompter() {
+      const scriptText = document.getElementById('script-text').value.trim();
+      
+      if (!scriptText) {
+        showError('Please enter some text for your teleprompter script.');
+        return;
+      }
+
+      // Save script to local storage
+      saveScript(scriptText);
+
+      // Setup teleprompter
+      setupTeleprompter(scriptText);
+      showTeleprompter();
+    }
+
+    function setupTeleprompter(scriptText) {
+    const container = document.getElementById('teleprompter');
+      const startBtn = document.getElementById('startBtn');
+      
+      // Reset state
+      currentWordIndex = 0;
+      spokenWords = [];
+      isListening = false;
+
+          // Wrap each word in a span with an ID while preserving line breaks
+      words = scriptText.split(/\s+/).filter(word => word.trim() !== '');
+      
+      // Process the original text to preserve line breaks and spacing
+      let processedHTML = '';
+      let wordIndex = 0;
+      let i = 0;
+      
+      while (i < scriptText.length) {
+        const char = scriptText[i];
+        
+        // Check if we're at the start of a word
+        if (char.match(/\S/)) {
+          // Find the complete word
+          let wordEnd = i;
+          while (wordEnd < scriptText.length && scriptText[wordEnd].match(/\S/)) {
+            wordEnd++;
+          }
+          
+          const word = scriptText.substring(i, wordEnd);
+          
+          // Wrap the word in a span
+          if (wordIndex < words.length) {
+            processedHTML += `<span id="w${wordIndex}">${word}</span>`;
+            wordIndex++;
+          }
+          
+          i = wordEnd;
+        } else {
+          // Handle whitespace and line breaks
+          if (char === '\n') {
+            processedHTML += '<br/>';
+          } else if (char === ' ' || char === '\t') {
+            processedHTML += ' ';
+          }
+          i++;
+        }
+      }
+      
+      container.innerHTML = processedHTML;
+
+      // Clear any existing highlighting classes
+      document.querySelectorAll('#teleprompter span').forEach(s => {
+        s.classList.remove('current', 'missed', 'mismatched');
+      });
+
+      // Initialize speech statistics
+      initializeSpeechStats();
+
+      // Reset start button and stop any existing recognition
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+      }
+      isListening = false;
+      stopContinuousScrolling();
+      
+      // Update button and highlight first word
+      updateStartButton();
+      highlightCurrentWord();
+    }
+
+    // Highlight current word and scroll to it
+    function highlightCurrentWord() {
+      const target = document.getElementById('w' + currentWordIndex);
+      if (target) {
+        // Remove current highlighting from all words
+        document.querySelectorAll('#teleprompter span').forEach(s => s.classList.remove('current'));
+        
+        // Highlight current word
+      target.classList.add('current');
+        
+        // Continuously scroll to keep current word centered
+        scrollToCurrentWord();
+      }
+      
+      // Update button state
+      updateStartButton();
+    }
+
+    // Continuous smooth scrolling function
+    function scrollToCurrentWord() {
+      const target = document.getElementById('w' + currentWordIndex);
+      const container = document.getElementById('teleprompter');
+      
+      if (!target || !container) return;
+      
+      const targetTop = target.offsetTop;
+      const containerHeight = container.clientHeight;
+      const targetHeight = target.clientHeight;
+      
+      // Calculate the desired position based on scroll position setting
+      let desiredPosition;
+      switch (scrollPosition) {
+        case 'top':
+          desiredPosition = targetTop - (containerHeight * 0.15); // 15% from top
+          break;
+        case 'bottom':
+          desiredPosition = targetTop - (containerHeight * 0.85) + targetHeight; // 85% from top
+          break;
+        case 'middle':
+        default:
+          desiredPosition = targetTop - (containerHeight / 2) + (targetHeight / 2); // Centered
+          break;
+      }
+      
+      // Get current scroll position
+      const currentScroll = container.scrollTop;
+      
+      // Calculate the difference
+      const scrollDiff = desiredPosition - currentScroll;
+      
+      // Only scroll if there's a meaningful difference (avoid micro-movements)
+      if (Math.abs(scrollDiff) > 2) {
+        // Smooth continuous scrolling with easing
+        const scrollStep = scrollDiff * 0.08; // Smooth and gentle scrolling
+        const newScrollTop = currentScroll + scrollStep;
+        
+        container.scrollTo({
+          top: newScrollTop,
+          behavior: 'auto' // Use auto for immediate response
+        });
+      }
+    }
+
+    // Start continuous scrolling
+    function startContinuousScrolling() {
+      if (scrollingInterval) {
+        clearInterval(scrollingInterval);
+      }
+      
+      // Continuously adjust scroll position to keep current word centered
+      scrollingInterval = setInterval(() => {
+        if (isListening && currentWordIndex < words.length) {
+          scrollToCurrentWord();
+        }
+      }, 50); // Update every 50ms for smooth scrolling
+    }
+
+    // Stop continuous scrolling
+    function stopContinuousScrolling() {
+      if (scrollingInterval) {
+        clearInterval(scrollingInterval);
+        scrollingInterval = null;
+      }
+    }
+
+    // Mark a word as missed (red highlight)
+    function markWordAsMissed(index) {
+      if (!highlightEnabled) {
+        console.log('Highlighting disabled, skipping missed word marking');
+        return; // Skip if highlighting is disabled
+      }
+      
+      const target = document.getElementById('w' + index);
+      if (target) {
+        console.log('Marking word as missed:', index, target.textContent);
+        target.classList.add('missed');
+        target.classList.remove('current');
+        
+        // Force style update
+        target.style.backgroundColor = '#f44336';
+        target.style.color = 'white';
+      } else {
+        console.log('Could not find target element for word:', index);
+      }
+      
+      // Update statistics
+      speechStats.missedWords++;
+    }
+
+    // Mark a word as mismatched (no highlight - counts as correct in analytics)
+    function markWordAsMismatched(index) {
+      if (!highlightEnabled) return; // Skip if highlighting is disabled
+      
+      const target = document.getElementById('w' + index);
+      if (target) {
+        target.classList.add('mismatched');
+        target.classList.remove('current');
+      }
+      
+      // Update statistics (tracked but counted as correct words in analytics)
+      speechStats.mismatchedWords++;
+    }
+
+    // Clean and normalize word for comparison
+    function normalizeWord(word) {
+      return word.replace(/[^a-z0-9]/gi, '').toLowerCase();
+    }
+
+    // Process speech recognition results
+    function processTranscript(transcript) {
+      if (!isListening || currentWordIndex >= words.length) return;
+      
+      const spokenWordsArray = transcript.trim().split(/\s+/);
+      const newWords = spokenWordsArray.slice(spokenWords.length);
+      
+      // Add new words to our spoken words array
+      spokenWords.push(...newWords);
+      
+      // Process each new word
+      newWords.forEach(spokenWord => {
+        if (currentWordIndex >= words.length) return;
+        
+        const normalizedSpoken = normalizeWord(spokenWord);
+        const normalizedExpected = normalizeWord(words[currentWordIndex]);
+        
+        if (normalizedSpoken === normalizedExpected) {
+          // Word matches current position! Move to next word
+          currentWordIndex++;
+          if (currentWordIndex < words.length) {
+            highlightCurrentWord();
+          }
+        } else {
+          // Word doesn't match current position, let's be smarter about it
+          let foundMatch = false;
+          let matchPosition = -1;
+          let shouldAdvance = false;
+          
+          // First, check if this word matches the previous word (we might have missed detecting it before)
+          if (currentWordIndex > 0) {
+            const normalizedPrevious = normalizeWord(words[currentWordIndex - 1]);
+            if (normalizedSpoken === normalizedPrevious) {
+              // This word matches the previous word, so we don't need to advance
+              foundMatch = true;
+              matchPosition = currentWordIndex - 1;
+            }
+          }
+          
+          // If not previous word, check if it matches the next word
+          if (!foundMatch && currentWordIndex + 1 < words.length) {
+            const normalizedNext = normalizeWord(words[currentWordIndex + 1]);
+            if (normalizedSpoken === normalizedNext) {
+              // This word matches the next word, mark current as missed and advance
+              markWordAsMissed(currentWordIndex);
+              currentWordIndex += 2; // Skip current and move past the matched word
+              if (currentWordIndex < words.length) {
+                highlightCurrentWord();
+              }
+              foundMatch = true;
+              matchPosition = currentWordIndex - 1;
+              shouldAdvance = true;
+            }
+          }
+          
+          // If still no match, check a few words ahead (skip detection)
+          if (!foundMatch) {
+            for (let i = currentWordIndex + 2; i < Math.min(currentWordIndex + 7, words.length); i++) {
+              if (normalizeWord(words[i]) === normalizedSpoken) {
+                // Mark skipped words as missed
+                for (let j = currentWordIndex; j < i; j++) {
+                  markWordAsMissed(j);
+                }
+                currentWordIndex = i + 1;
+                if (currentWordIndex < words.length) {
+                  highlightCurrentWord();
+                }
+                foundMatch = true;
+                matchPosition = i;
+                shouldAdvance = true;
+                break;
+              }
+            }
+          }
+          
+          // If still no match found, check if it's a word we've already passed (check all previous words)
+          if (!foundMatch && currentWordIndex >= 2) {
+            for (let i = 0; i < currentWordIndex - 1; i++) {
+              if (normalizeWord(words[i]) === normalizedSpoken) {
+                // Word matches something we already passed, ignore it (don't advance)
+                foundMatch = true;
+                matchPosition = i;
+                
+                // Clear mismatched highlights from the found position forward (user may have gone back to repeat)
+                clearMismatchedHighlightsForward(i);
+                break;
+              }
+            }
+          }
+          
+          // Only mark as mismatched if we truly couldn't find it anywhere in our ranges
+          if (!foundMatch) {
+            // No match found anywhere in reasonable range, mark current word as mismatched and advance
+            markWordAsMismatched(currentWordIndex);
+            currentWordIndex++;
+            if (currentWordIndex < words.length) {
+              highlightCurrentWord();
+            }
+          }
+        }
+      });
+    }
+
+    // Stop speech recognition
+    function stopRecognition() {
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+      }
+      isListening = false;
+      stopContinuousScrolling();
+      
+      // Update button state
+      updateStartButton();
+    }
+
+    // Initialize Web Speech API
+    function startRecognition(isResume = false) {
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Speech) {
+        alert('Your browser does not support Web Speech API. Please use Chrome or Edge.');
+        return;
+      }
+
+      recognition = new Speech();
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.continuous = true;
+
+      recognition.onresult = e => {
+        let transcript = '';
+        for (const r of e.results) {
+          transcript += r[0].transcript + ' ';
+        }
+        processTranscript(transcript);
+      };
+
+      recognition.onerror = e => {
+        console.error('Speech recognition error:', e);
+        stopRecognition();
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        stopContinuousScrolling();
+        updateStartButton();
+      };
+
+      recognition.start();
+      
+      // Set listening state and reset speech buffer
+      isListening = true;
+      spokenWords = [];
+      
+      // Only reset position if this is a fresh start, not a resume
+      if (!isResume) {
+        currentWordIndex = 0;
+        // Reset start time for fresh start
+        speechStats.startTime = new Date();
+        speechStats.endTime = null;
+      }
+      
+      // Highlight current word (whether fresh start or resume)
+      highlightCurrentWord();
+      
+      // Start continuous scrolling to keep text centered
+      startContinuousScrolling();
+      
+      // Button text is handled by updateStartButton() in highlightCurrentWord()
+    }
+
+    // Toggle speech recognition
+    function toggleRecognition() {
+      const startBtn = document.getElementById('startBtn');
+      
+      if (startBtn.textContent === 'View Analysis') {
+        // Show analysis modal
+        showAnalysis();
+      } else if (isListening) {
+        stopRecognition();
+      } else {
+        // Check if we're resuming (currentWordIndex > 0) or starting fresh
+        const isResume = currentWordIndex > 0 && currentWordIndex < words.length;
+        startRecognition(isResume);
+      }
+    }
+
+    // Event listeners
+    document.getElementById('startBtn').addEventListener('click', toggleRecognition);
+
+    // Initialize app on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadScript();
+      loadScrollPosition();
+      loadHighlightEnabled();
+      
+      // Initialize theme
+      const savedTheme = getSavedTheme();
+      applyTheme(savedTheme);
+      
+      // Listen for system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        // Only auto-update if user hasn't manually set a preference
+        if (!localStorage.getItem(THEME_KEY)) {
+          applyTheme(e.matches ? 'dark' : 'light');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
