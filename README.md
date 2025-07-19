@@ -1,8 +1,7 @@
 # 📺 AI Teleprompter
 
-[![Watch on YouTube](https://img.youtube.com/vi/fi8pnLPxwi0/0.jpg)]([https://www.youtube.com/watch?v=fi8pnLPxwi0]
+[![Watch on YouTube](https://img.youtube.com/vi/fi8pnLPxwi0/0.jpg)]([https://www.youtube.com/watch?v=fi8pnLPxwi0])
 
-https://www.youtube.com/watch?v=fi8pnLPxwi0
 
 A modern, intelligent teleprompter application that uses AI-powered speech recognition to follow your speech in real-time. Built with vanilla HTML, CSS, and JavaScript for maximum compatibility and performance.
 
