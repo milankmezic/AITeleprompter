@@ -16,18 +16,23 @@ A modern, intelligent teleprompter application that uses AI-powered speech recog
 - **No highlighting** for mismatched words (counts as correct)
 - Toggleable highlight system in settings
 
-### 🛠️ **Customizable Settings**
+### 🛠️ **Advanced Customizable Settings**
 - **Theme Selection**: Light and dark mode with system preference detection
 - **Scroll Positioning**: Top, center, or bottom word positioning
 - **Word Highlights**: Toggle visual feedback on/off
+- **Font Size Control**: Adjustable text size (Small, Medium, Large, Extra Large)
+- **Mirror Mode**: Horizontal flip for special teleprompter setups
 - **Local Storage**: All settings and scripts are saved automatically
 
-### 📊 **Performance Analytics**
+### 📊 **Enhanced Performance Analytics**
 - Comprehensive speech analysis when session completes
-- Accuracy percentage calculation
+- Accuracy percentage calculation with visual progress bar
 - Reading speed (words per minute)
-- Total reading time
+- Total reading time with precise timing
 - Detailed statistics on correct vs missed words
+- **Script Statistics**: Real-time word count and estimated reading time
+- **Analysis History**: View previous session results with "Speech Analysis" button
+- **Persistent Data**: Analysis results saved between sessions
 
 ### 🎯 **Professional Features**
 - **Continuous Smooth Scrolling**: Keeps text flowing naturally
@@ -35,6 +40,9 @@ A modern, intelligent teleprompter application that uses AI-powered speech recog
 - **Pause/Resume**: Full control over speech recognition
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Manual Scroll Override**: Take control when needed
+- **Modern UI**: Clean interface with Tailwind CSS styling
+- **Toggle Switches**: Professional toggle controls for settings
+- **Streamlined Layout**: Optimized settings organization
 
 ## 🚀 Getting Started
 
@@ -121,6 +129,48 @@ AITeleprompter/
 └── LICENSE            # MIT license file
 ```
 
+## 📋 Version History
+
+### v2.0.0 - Enhanced UI & Analytics (Current)
+**Release Date**: July 2025
+
+#### ✨ New Features
+- **Modern UI Migration**: Upgraded to Tailwind CSS for cleaner, more professional styling
+- **Advanced Settings Page**: Moved all settings to a dedicated advanced settings screen
+- **Font Size Control**: Added adjustable text size options (Small, Medium, Large, Extra Large)
+- **Mirror Mode**: Added horizontal flip functionality for special teleprompter setups
+- **Script Statistics**: Real-time word count and estimated reading time display
+- **Speech Analysis Button**: Quick access to previous session results
+- **Analysis Persistence**: Analysis data saved between sessions
+- **Professional Toggle Switches**: Replaced checkboxes with modern toggle controls
+- **Streamlined Layout**: Optimized main settings screen with full-width script input
+
+#### 🔧 Improvements
+- **Enhanced Reading Time**: Fixed precise timing calculation and display
+- **Better Settings Organization**: Separated basic and advanced settings
+- **Improved User Experience**: Cleaner interface with better visual hierarchy
+- **Robust Error Handling**: Better handling of speech recognition edge cases
+- **Performance Optimizations**: Improved real-time statistics updates
+
+#### 🐛 Bug Fixes
+- Fixed reading time calculation showing "0:00" in analysis modal
+- Resolved duplicate HTML ID conflicts
+- Fixed toggle switch styling and functionality
+- Improved speech recognition end time tracking
+
+### v1.0.0 - Initial Release
+**Release Date**: July 2025
+
+#### ✨ Core Features
+- Real-time speech recognition with Web Speech API
+- Word-by-word highlighting system
+- Comprehensive performance analytics
+- Light/dark theme support
+- Local storage for settings persistence
+- Responsive design for all devices
+- Continuous smooth scrolling
+- Pause/resume functionality
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -158,9 +208,14 @@ This project is licensed under the GNU AFFERO GENERAL  - see the [LICENSE](LICEN
 
 ## 📈 Roadmap
 
-- [ ] **Font Size Control** - Adjustable text size for better readability
+- [x] **Font Size Control** - Adjustable text size for better readability ✅
+- [x] **Enhanced Analytics** - Improved performance metrics and timing precision ✅
+- [x] **Modern UI** - Professional styling with Tailwind CSS ✅
+- [x] **Advanced Settings** - Organized settings management ✅
 - [ ] **External Script Loading** - Load scripts from URLs or external sources
-- [ ] **Detailed Analytics** - Enhanced performance metrics and speech patterns analysis
+- [ ] **Multi-language Support** - Support for different speech recognition languages
+- [ ] **Export Functionality** - Export analysis results and scripts
+- [ ] **Audio Cue Support** - Audio feedback for performance milestones
 
 ## 🐛 Bug Reports
 

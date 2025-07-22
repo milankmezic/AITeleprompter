@@ -3,893 +3,239 @@
 <head>
   <meta charset="UTF-8">
   <title>AI Teleprompter</title>
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      /* Light Mode Colors */
-      --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --text-color: white;
-      --glass-bg: rgba(255,255,255,0.1);
-      --glass-border: rgba(255,255,255,0.2);
-      --glass-hover: rgba(255,255,255,0.2);
-      --button-bg: rgba(255,255,255,0.2);
-      --button-border: white;
-      --button-hover-bg: white;
-      --button-hover-color: #667eea;
-      --teleprompter-bg: #f0f0f0;
-      --teleprompter-color: #333;
-      --current-word-bg: #4CAF50;
-      --current-word-color: white;
-      --missed-word-bg: #f44336;
-      --missed-word-color: white;
-      --mismatched-word-bg: transparent;
-      --mismatched-word-color: inherit;
-      --floating-btn-bg: #667eea;
-      --floating-btn-hover: #764ba2;
-      --textarea-bg: rgba(255,255,255,0.9);
-      --textarea-color: #333;
-      --back-btn-bg: rgba(255,255,255,0.2);
-      --back-btn-border: rgba(255,255,255,0.3);
-      --back-btn-hover: rgba(255,255,255,0.3);
-    }
-
-    [data-theme="dark"] {
-      /* Dark Mode Colors */
-      --bg-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-      --text-color: white;
-      --glass-bg: rgba(255,255,255,0.1);
-      --glass-border: rgba(255,255,255,0.2);
-      --glass-hover: rgba(255,255,255,0.2);
-      --button-bg: rgba(255,255,255,0.2);
-      --button-border: white;
-      --button-hover-bg: white;
-      --button-hover-color: #2c3e50;
-      --teleprompter-bg: #1a1a1a;
-      --teleprompter-color: #e0e0e0;
-      --current-word-bg: #27ae60;
-      --current-word-color: white;
-      --missed-word-bg: #e74c3c;
-      --missed-word-color: white;
-      --mismatched-word-bg: transparent;
-      --mismatched-word-color: inherit;
-      --floating-btn-bg: #3498db;
-      --floating-btn-hover: #2980b9;
-      --textarea-bg: rgba(255,255,255,0.9);
-      --textarea-color: #333;
-      --back-btn-bg: rgba(255,255,255,0.2);
-      --back-btn-border: rgba(255,255,255,0.3);
-      --back-btn-hover: rgba(255,255,255,0.3);
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: var(--bg-gradient);
-      color: var(--text-color);
-      overflow: hidden;
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        overflow: auto;
-      }
-    }
-
-    .screen {
-      display: none;
-      height: 100vh;
-      width: 100vw;
-      padding: 2rem;
-      position: relative;
-    }
-
-    .screen.active {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #settings-screen.active {
-      justify-content: flex-start;
-      align-items: stretch;
-      overflow-y: auto;
-      height: 100vh;
-    }
-
-    /* Splash Screen */
-    #splash-screen {
-      text-align: center;
-    }
-
-    .logo {
-      font-size: 4rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-
-    .subtitle {
-      font-size: 1.5rem;
-      margin-bottom: 3rem;
-      opacity: 0.9;
-    }
-
-    .github-link {
-      position: absolute;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      opacity: 0.8;
-      transition: opacity 0.3s ease;
-    }
-
-    .github-link:hover {
-      opacity: 1;
-    }
-
-    .github-link a {
-      color: var(--text-color);
-      text-decoration: none;
-      font-size: 0.9rem;
-      padding: 0.5rem 1rem;
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 20px;
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-    }
-
-    .github-link a:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-
-    .btn {
-      background: var(--button-bg);
-      border: 2px solid var(--button-border);
-      color: var(--text-color);
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-    }
-
-    .btn:hover {
-      background: var(--button-hover-bg);
-      color: var(--button-hover-color);
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    /* Settings Screen */
-    #settings-screen {
-      max-width: 1200px;
-      width: 100%;
-      min-height: 100vh;
-      padding: 2rem;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-
-    .settings-container {
-      background: var(--glass-bg);
-      border-radius: 20px;
-      padding: 2rem;
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
-      min-height: calc(100vh - 4rem);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .settings-content {
-      display: grid;
-      grid-template-columns: 1fr 1.5fr;
-      gap: 2rem;
-      flex: 1;
-      align-items: start;
-      margin-bottom: 2rem;
-    }
-
-    .settings-left {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .settings-right {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .settings-header {
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-
-    .settings-title {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    .settings-subtitle {
-      font-size: 1.1rem;
-      opacity: 0.9;
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 200px;
-      padding: 1rem;
-      border: none;
-      border-radius: 10px;
-      background: var(--textarea-bg);
-      color: var(--textarea-color);
-      font-size: 1rem;
-      resize: vertical;
-      font-family: inherit;
-    }
-
-    .settings-right textarea {
-      min-height: 500px;
-      resize: none;
-    }
-
-    textarea:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 2rem;
-    }
-
-    .settings-left .btn-group {
-      margin-top: auto;
-      padding-top: 2rem;
-    }
-
-    .settings-footer {
-      text-align: center;
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .version-link {
-      color: var(--text-color);
-      text-decoration: none;
-      font-size: 0.85rem;
-      opacity: 0.7;
-      transition: opacity 0.3s ease;
-    }
-
-    .version-link:hover {
-      opacity: 1;
-      text-decoration: underline;
-    }
-
-    .btn-secondary {
-      background: var(--glass-bg);
-      border: 2px solid var(--glass-border);
-    }
-
-    .btn-secondary:hover {
-      background: var(--glass-hover);
-      color: var(--text-color);
-    }
-
-    /* Theme Toggle */
-    .theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .theme-toggle input[type="checkbox"] {
-      position: relative;
-      width: 50px;
-      height: 24px;
-      appearance: none;
-      background: var(--glass-bg);
-      border: 2px solid var(--glass-border);
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .theme-toggle input[type="checkbox"]:before {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 16px;
-      height: 16px;
-      background: var(--text-color);
-      border-radius: 50%;
-      transition: transform 0.3s ease;
-    }
-
-    .theme-toggle input[type="checkbox"]:checked:before {
-      transform: translateX(24px);
-    }
-
-    .theme-toggle input[type="checkbox"]:checked {
-      background: var(--button-bg);
-      border-color: var(--button-border);
-    }
-
-    .theme-toggle label {
-      font-size: 1rem;
-      cursor: pointer;
-      margin-bottom: 0;
-    }
-
-    /* Scroll Position Selector */
-    .scroll-position-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .scroll-position-group label {
-      font-size: 1.1rem;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-
-    .scroll-position-group select {
-      padding: 0.75rem 1rem;
-      border: none;
-      border-radius: 10px;
-      background: var(--textarea-bg);
-      color: var(--textarea-color);
-      font-size: 1rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .scroll-position-group select:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
-    }
-
-    .scroll-position-group select:hover {
-      background: var(--glass-hover);
-    }
-
-    .scroll-position-group select option {
-      background: var(--teleprompter-bg);
-      color: var(--teleprompter-color);
-    }
-
-    /* Teleprompter Screen */
-    #teleprompter-screen {
-      background: var(--teleprompter-bg);
-      color: var(--teleprompter-color);
-      padding: 0;
-      justify-content: flex-start;
-    }
-
-    #teleprompter {
-      width: 100%;
-      height: 100vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 5rem 2rem 2rem 2rem;
-      line-height: 1.6;
-      font-size: 2rem;
-      background: var(--teleprompter-bg);
-      color: var(--teleprompter-color);
-      scroll-padding-top: 2rem;
-      scrollbar-width: thin;
-      scrollbar-color: var(--glass-border) transparent;
-    }
-
-    #teleprompter::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    #teleprompter::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    #teleprompter::-webkit-scrollbar-thumb {
-      background: var(--glass-border);
-      border-radius: 4px;
-    }
-
-    #teleprompter::-webkit-scrollbar-thumb:hover {
-      background: var(--glass-hover);
-    }
-
-    #teleprompter span {
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      background: transparent;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
     #teleprompter span.current {
-      background: var(--current-word-bg);
-      color: var(--current-word-color);
-    }
-
+        background-color: #4ade80; /* Tailwind green-400 */
+        color: #fff;
+        border-radius: 0.25rem;
+        transition: background 0.2s, color 0.2s;
+      }
     #teleprompter span.missed {
-      background: var(--missed-word-bg);
-      color: var(--missed-word-color);
-    }
-
+        background-color: #f87171; /* Tailwind red-400 */
+        color: #fff;
+        border-radius: 0.25rem;
+        transition: background 0.2s, color 0.2s;
+      }
     #teleprompter span.mismatched {
-      background: var(--mismatched-word-bg);
-      color: var(--mismatched-word-color);
-    }
-
-    .floating-start-btn {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--floating-btn-bg);
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      border-radius: 50px;
-      cursor: pointer;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
-      z-index: 1000;
-    }
-
-    .floating-start-btn:hover {
-      background: var(--floating-btn-hover);
-      transform: translateX(-50%) translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    }
-
-    .floating-start-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    .back-btn {
-      position: absolute;
-      top: 2rem;
-      left: 2rem;
-      background: var(--back-btn-bg);
-      border: 1px solid var(--back-btn-border);
-      color: var(--text-color);
-      padding: 0.5rem 1rem;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(10px);
-    }
-
-    .back-btn:hover {
-      background: var(--back-btn-hover);
-    }
-
-    .error-message {
-      background: rgba(255,0,0,0.1);
-      border: 1px solid rgba(255,0,0,0.3);
-      color: #ff6b6b;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    /* Analysis Modal */
-    .analysis-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-      backdrop-filter: blur(5px);
-    }
-
-    .analysis-modal.active {
-      display: flex;
-    }
-
-    .analysis-content {
-      background: var(--glass-bg);
-      border: 2px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 2rem;
-      max-width: 600px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-      backdrop-filter: blur(20px);
-      color: var(--text-color);
-    }
-
-    .analysis-header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .analysis-title {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .analysis-subtitle {
-      font-size: 1.1rem;
-      opacity: 0.9;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: var(--button-bg);
-      border: 2px solid var(--button-border);
-      border-radius: 15px;
-      padding: 1.5rem;
-      text-align: center;
-      transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
-
-    .stat-label {
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
-
-    .accuracy-bar {
-      background: var(--glass-bg);
-      border-radius: 10px;
-      height: 20px;
-      margin: 1rem 0;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .accuracy-fill {
-      background: linear-gradient(90deg, #4CAF50, #8BC34A);
-      height: 100%;
-      transition: width 0.8s ease;
-      position: relative;
-    }
-
-    .accuracy-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: white;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    }
-
-    .analysis-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-top: 2rem;
-    }
-
-    .modal-btn {
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 25px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: inherit;
-    }
-
-    .modal-btn.primary {
-      background: var(--floating-btn-bg);
-      color: white;
-    }
-
-    .modal-btn.primary:hover {
-      background: var(--floating-btn-hover);
-      transform: translateY(-2px);
-    }
-
-    .modal-btn.secondary {
-      background: var(--button-bg);
-      color: var(--text-color);
-      border: 2px solid var(--button-border);
-    }
-
-    .modal-btn.secondary:hover {
-      background: var(--button-hover-bg);
-      color: var(--button-hover-color);
-    }
-
-    @media (max-width: 768px) {
-      .logo {
-        font-size: 3rem;
+        background-color: transparent;
+        color: inherit;
+        border-radius: 0.25rem;
       }
       
-      .subtitle {
-        font-size: 1.2rem;
+            /* Toggle Switch Styles */
+      input[type="checkbox"]:checked + label .dot {
+        transform: translateX(16px);
+        background-color: white !important;
+      }
+      input[type="checkbox"]:checked + label div:first-child {
+        background-color: #3b82f6 !important; /* Tailwind blue-500 */
+      }
+      input[type="checkbox"]:not(:checked) + label div:first-child {
+        background-color: #9ca3af !important; /* Tailwind gray-400 */
+      }
+      input[type="checkbox"]:not(:checked) + label .dot {
+        background-color: white !important;
       }
       
-      #teleprompter {
-        font-size: 1.5rem;
+      /* Ensure proper toggle appearance */
+      .relative .w-10.h-6 {
+        border-radius: 9999px !important;
+        transition: background-color 0.3s ease-in-out;
       }
       
-      .btn-group {
-        flex-direction: column;
-        align-items: center;
+      /* Ensure the dot is visible and properly positioned */
+      .dot {
+        position: absolute !important;
+        left: 2px !important;
+        top: 2px !important;
+        width: 16px !important;
+        height: 16px !important;
+        border-radius: 50% !important;
+        background-color: white !important;
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 10;
       }
       
-      .analysis-title {
-        font-size: 2rem;
+      /* Force white background on all dots regardless of state */
+      input[type="checkbox"] + label .dot {
+        background-color: white !important;
       }
       
-      .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      /* Override any inherited background colors */
+      .dot[style*="background"] {
+        background-color: white !important;
       }
-      
-      .stat-number {
-        font-size: 2rem;
-      }
-      
-      .analysis-actions {
-        flex-direction: column;
-      }
-      
-      .settings-content {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        display: flex;
-        flex-direction: column;
-      }
-      
-      #settings-screen {
-        padding: 1rem;
-        min-height: 100vh;
-        height: auto;
-        overflow-y: scroll;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      #settings-screen.active {
-        height: auto;
-        min-height: 100vh;
-      }
-      
-      .settings-container {
-        padding: 1rem;
-        min-height: auto;
-        height: auto;
-        flex: none;
-      }
-      
-      .settings-left {
-        order: 2;
-      }
-      
-      .settings-right {
-        order: 1;
-        flex: 1;
-        margin-bottom: 2rem;
-      }
-      
-      .settings-right textarea {
-        min-height: 250px;
-        height: 40vh;
-        max-height: 400px;
-      }
-      
-      .settings-left .btn-group {
-        margin-top: 1rem;
-        padding-top: 1rem;
-      }
-      
-      .github-link {
-        position: static;
-        transform: none;
-        margin-top: 2rem;
-      }
-      
-      .github-link a {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-      }
-    }
   </style>
 </head>
-<body>
+<body class="bg-gradient-to-br from-indigo-400 to-purple-600 dark:from-gray-900 dark:to-gray-800 text-white dark:text-white min-h-screen overflow-hidden transition-colors duration-300">
   <!-- Splash Screen -->
-  <div id="splash-screen" class="screen active">
-    <div class="logo">📺 AI Teleprompter</div>
-    <div class="subtitle">Professional speech assistance powered by AI</div>
-    <button class="btn" onclick="showSettings()">Get Started</button>
-    
-    <div class="github-link">
-      <a href="https://github.com/milankmezic/AITeleprompter" target="_blank" rel="noopener noreferrer">
-        🔗 Get Latest Version on GitHub
-      </a>
+  <div id="splash-screen" class="screen flex flex-col justify-center items-center h-screen w-screen text-center">
+    <div class="logo text-6xl font-bold mb-4 drop-shadow-lg">📺 AI Teleprompter</div>
+    <div class="subtitle text-2xl mb-12 opacity-90">Professional speech assistance powered by AI</div>
+    <button class="btn bg-white/20 border-2 border-white text-white px-8 py-4 text-xl rounded-full cursor-pointer transition hover:bg-white hover:text-indigo-500 hover:shadow-lg mb-8 backdrop-blur dark:bg-white/10 dark:border-white/40 dark:hover:bg-white/20 dark:hover:text-indigo-300" onclick="showSettings()">Get Started</button>
+    <div class="github-link absolute bottom-8 left-1/2 -translate-x-1/2 opacity-80 hover:opacity-100 transition">
+      <a href="https://github.com/milankmezic/AITeleprompter" target="_blank" rel="noopener noreferrer" class="text-white no-underline text-base px-4 py-2 border border-white/30 rounded-full bg-white/10 backdrop-blur hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg transition dark:bg-white/5 dark:border-white/20 dark:hover:bg-white/10">🔗 Get Latest Version on GitHub</a>
     </div>
   </div>
-
   <!-- Settings Screen -->
-  <div id="settings-screen" class="screen">
-    <div class="settings-container">
-      <div class="settings-header">
-        <h2 class="settings-title">Setup Your Script</h2>
-        <p class="settings-subtitle">Configure your teleprompter settings and enter your script</p>
+  <div id="settings-screen" class="screen hidden flex-col items-center justify-start min-h-screen w-full p-8 overflow-y-auto dark:bg-gray-900">
+    <div class="settings-container bg-white/10 dark:bg-white/5 rounded-2xl p-8 w-full max-w-5xl min-h-[calc(100vh-4rem)] flex flex-col backdrop-blur border border-white/20 dark:border-white/10">
+      <div class="settings-header mb-8 text-center">
+        <h2 class="settings-title text-4xl mb-2">Setup Your Script</h2>
+        <p class="settings-subtitle text-lg opacity-90 mb-8">Configure your teleprompter settings and enter your script</p>
         <div id="error-container"></div>
       </div>
-      
-      <div class="settings-content">
-        <div class="settings-left">
-          <div class="form-group">
-            <div class="theme-toggle">
-              <label for="theme-toggle">🌙 Dark Mode</label>
-              <input type="checkbox" id="theme-toggle" />
-            </div>
+      <div class="settings-content flex flex-col gap-6 flex-1 mb-8">
+        <div class="form-group flex-1 flex flex-col">
+          <label for="script-text" class="mb-2 text-base font-medium">Your Script:</label>
+          <textarea id="script-text" placeholder="Enter your script here... The teleprompter will follow your speech and highlight words as you speak them." class="min-h-[300px] p-4 rounded-lg bg-white/90 text-gray-800 text-base resize-none font-sans focus:outline-none focus:ring-2 focus:ring-indigo-300"></textarea>
+          <div id="script-stats" class="mt-2 text-sm text-white/80 flex gap-4">
+            <span id="word-count">Words: 0</span>
+            <span id="reading-time">Estimated reading time: 0:00</span>
           </div>
-          
-          <div class="form-group">
-            <div class="theme-toggle">
-              <label for="highlight-toggle">🎨 Word Highlights</label>
-              <input type="checkbox" id="highlight-toggle" checked />
-            </div>
-            <small style="opacity: 0.8; font-size: 0.9rem; margin-top: 0.25rem; display: block;">
-              Show red highlights for missed words
-            </small>
+        </div>
+        <div class="btn-group flex gap-4 justify-center">
+          <button class="btn btn-secondary bg-white/10 border-2 border-white/20 text-white px-8 py-4 text-xl rounded-full cursor-pointer transition hover:bg-white/20 hover:text-white" onclick="showSplash()">Back</button>
+          <button class="btn bg-white/20 border-2 border-white text-white px-8 py-4 text-xl rounded-full cursor-pointer transition hover:bg-white hover:text-indigo-500 hover:shadow-lg" onclick="startTeleprompter()">Start Teleprompter</button>
+          <button id="speech-analysis-btn" class="btn bg-indigo-500 border-2 border-indigo-400 text-white px-8 py-4 text-xl rounded-full cursor-pointer transition hover:bg-indigo-600 hover:shadow-lg" onclick="showLatestAnalysis()" style="display: none;">Speech Analysis</button>
+        </div>
+        <button id="advanced-settings-toggle" type="button" class="text-indigo-200 hover:text-indigo-400 underline text-base focus:outline-none text-center">Show Advanced Settings</button>
+      </div>
+    </div>
+  </div>
+  <!-- Advanced Settings Screen -->
+  <div id="advanced-settings-screen" class="screen hidden flex flex-col items-center justify-start min-h-screen w-full p-8 overflow-y-auto dark:bg-gray-900">
+    <div class="settings-container bg-white/10 dark:bg-white/5 rounded-2xl p-8 w-full max-w-3xl flex flex-col backdrop-blur border border-white/20 dark:border-white/10">
+      <div class="settings-header mb-8 text-center">
+        <h2 class="settings-title text-3xl mb-2">Advanced Settings</h2>
+        <p class="settings-subtitle text-lg opacity-90 mb-8">Fine-tune your teleprompter experience</p>
+      </div>
+      <div class="settings-content flex flex-col gap-4">
+                <!-- Dark Mode -->
+        <div class="form-group mb-4 flex items-center gap-3">
+          <label for="theme-toggle" class="text-base font-medium mb-0">🌙 Dark Mode</label>
+          <div class="relative">
+            <input type="checkbox" id="theme-toggle" class="sr-only">
+            <label for="theme-toggle" class="flex items-center cursor-pointer">
+              <div class="relative w-10 h-6 bg-gray-400 rounded-full shadow-inner">
+                <div class="dot" style="background-color: white !important;"></div>
+              </div>
+            </label>
           </div>
+        </div>
           
-          <div class="form-group">
-            <div class="scroll-position-group">
-              <label for="scroll-position">Current Word Position:</label>
-              <select id="scroll-position">
+                <!-- Word Highlights -->
+        <div class="form-group mb-4 flex items-center gap-3">
+          <label for="highlight-toggle" class="text-base font-medium mb-0">🎨 Word Highlights</label>
+          <div class="relative">
+            <input type="checkbox" id="highlight-toggle" checked class="sr-only">
+            <label for="highlight-toggle" class="flex items-center cursor-pointer">
+              <div class="relative w-10 h-6 bg-gray-400 rounded-full shadow-inner">
+                <div class="dot" style="background-color: white !important;"></div>
+              </div>
+            </label>
+          </div>
+        </div>
+        <small class="opacity-80 text-sm mb-4 block">Show red highlights for missed words</small>
+
+        <!-- Font Size -->
+        <div class="form-group mb-4">
+          <label for="font-size" class="text-base font-medium mb-0">Font Size:</label>
+          <select id="font-size" class="px-4 py-2 rounded-lg bg-white/90 text-gray-800 text-base font-normal cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <option value="text-2xl">Small</option>
+            <option value="text-3xl" selected>Medium</option>
+            <option value="text-4xl">Large</option>
+            <option value="text-5xl">Extra Large</option>
+          </select>
+        </div>
+
+        <!-- Current Word Position -->
+        <div class="form-group mb-4">
+          <label for="scroll-position" class="text-base font-medium mb-0">Current Word Position:</label>
+          <select id="scroll-position" class="px-4 py-2 rounded-lg bg-white/90 text-gray-800 text-base font-normal cursor-pointer transition focus:outline-none focus:ring-2 focus:ring-indigo-300">
                 <option value="top">📄 Top of Screen</option>
                 <option value="middle" selected>🎯 Center of Screen</option>
                 <option value="bottom">📋 Bottom of Screen</option>
               </select>
-            </div>
           </div>
           
-          <div class="btn-group">
-            <button class="btn btn-secondary" onclick="showSplash()">Back</button>
-            <button class="btn" onclick="startTeleprompter()">Start Teleprompter</button>
-          </div>
-          
-          <div class="settings-footer">
-            <a href="https://github.com/milankmezic/AITeleprompter" target="_blank" rel="noopener noreferrer" class="version-link">
-              📱 Get Latest Version
-            </a>
+                <!-- Mirror Mode -->
+        <div class="form-group mb-4 flex items-center gap-3">
+          <label for="mirror-mode" class="text-base font-medium mb-0">Mirror Mode</label>
+          <div class="relative">
+            <input id="mirror-mode" type="checkbox" class="sr-only">
+            <label for="mirror-mode" class="flex items-center cursor-pointer">
+              <div class="relative w-10 h-6 bg-gray-400 rounded-full shadow-inner">
+                <div class="dot" style="background-color: white !important;"></div>
+              </div>
+            </label>
           </div>
         </div>
         
-        <div class="settings-right">
-          <div class="form-group" style="flex: 1; display: flex; flex-direction: column;">
-            <label for="script-text">Your Script:</label>
-            <textarea 
-              id="script-text" 
-              placeholder="Enter your script here... The teleprompter will follow your speech and highlight words as you speak them."
-              style="flex: 1; min-height: 400px;"
-            ></textarea>
+        <!-- Reset to Defaults -->
+        <div class="form-group mb-2">
+          <button id="reset-defaults" class="btn bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-700 transition">Reset to Defaults</button>
           </div>
+        <div class="btn-group flex gap-4 justify-center mt-8">
+          <button class="btn btn-secondary bg-white/10 border-2 border-white/20 text-white px-8 py-4 text-xl rounded-full cursor-pointer transition hover:bg-white/20 hover:text-white" onclick="showSettings()">Back</button>
         </div>
       </div>
     </div>
   </div>
-
   <!-- Teleprompter Screen -->
-  <div id="teleprompter-screen" class="screen">
-    <button class="back-btn" onclick="showSettings()">← Back to Settings</button>
-  <div id="teleprompter"></div>
-    <button id="startBtn" class="floating-start-btn">Start Speaking</button>
+  <div id="teleprompter-screen" class="screen hidden flex flex-col justify-start items-center min-h-screen w-full bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-0">
+    <button class="back-btn absolute top-8 left-8 bg-white/20 border border-white/30 text-indigo-700 dark:text-indigo-300 px-4 py-2 rounded-full cursor-pointer transition hover:bg-white/40 z-10" onclick="showSettings()">← Back to Settings</button>
+    <div id="teleprompter" class="w-full h-screen overflow-y-auto px-8 pt-32 pb-8 leading-relaxed text-3xl bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-medium scroll-py-8"></div>
+    <button id="startBtn" class="floating-start-btn fixed bottom-8 left-1/2 -translate-x-1/2 bg-indigo-500 dark:bg-indigo-700 text-white px-8 py-4 text-xl rounded-full shadow-lg cursor-pointer transition hover:bg-indigo-700 dark:hover:bg-indigo-900 z-20">Start Speaking</button>
   </div>
 
   <!-- Analysis Modal -->
-  <div id="analysis-modal" class="analysis-modal">
-    <div class="analysis-content">
-      <div class="analysis-header">
-        <h2 class="analysis-title">
-          <span>📊</span>
-          <span>Speech Analysis</span>
-        </h2>
-        <p class="analysis-subtitle">Your teleprompter performance summary</p>
+  <div id="analysis-modal" class="analysis-modal hidden fixed inset-0 bg-black/80 flex justify-center items-center z-50 backdrop-blur">
+    <div class="analysis-content bg-white/10 dark:bg-white/5 border-2 border-white/20 dark:border-white/10 rounded-2xl p-8 max-w-xl w-full max-h-[80vh] overflow-y-auto backdrop-blur text-white">
+      <div class="analysis-header text-center mb-8">
+        <h2 class="analysis-title text-4xl flex items-center justify-center gap-2 mb-2"><span>📊</span><span>Speech Analysis</span></h2>
+        <p class="analysis-subtitle text-lg opacity-90">Your teleprompter performance summary</p>
       </div>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-number" id="total-words">0</span>
-          <span class="stat-label">Total Words</span>
+      <div class="stats-grid grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div class="stat-card bg-white/20 border-2 border-white/30 rounded-xl p-6 text-center transition hover:shadow-lg">
+          <span class="stat-number text-3xl font-bold block mb-2" id="total-words">0</span>
+          <span class="stat-label text-sm opacity-80">Total Words</span>
         </div>
-        
-        <div class="stat-card">
-          <span class="stat-number" id="correct-words">0</span>
-          <span class="stat-label">Correct Words</span>
+        <div class="stat-card bg-white/20 border-2 border-white/30 rounded-xl p-6 text-center transition hover:shadow-lg">
+          <span class="stat-number text-3xl font-bold block mb-2" id="correct-words">0</span>
+          <span class="stat-label text-sm opacity-80">Correct Words</span>
         </div>
-        
-        <div class="stat-card">
-          <span class="stat-number" id="missed-words">0</span>
-          <span class="stat-label">Missed Words</span>
+        <div class="stat-card bg-white/20 border-2 border-white/30 rounded-xl p-6 text-center transition hover:shadow-lg">
+          <span class="stat-number text-3xl font-bold block mb-2" id="missed-words">0</span>
+          <span class="stat-label text-sm opacity-80">Missed Words</span>
         </div>
       </div>
-      
-      <div class="accuracy-bar">
-        <div class="accuracy-fill" id="accuracy-fill">
-          <div class="accuracy-text" id="accuracy-text">0%</div>
+      <div class="accuracy-bar bg-white/20 rounded-lg h-6 my-4 overflow-hidden relative">
+        <div class="accuracy-fill bg-gradient-to-r from-green-500 to-lime-400 h-full transition-all duration-700" id="accuracy-fill">
+          <div class="accuracy-text absolute inset-0 flex items-center justify-center text-sm font-bold text-white drop-shadow" id="accuracy-text">0%</div>
         </div>
       </div>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-number" id="reading-time">0:00</span>
-          <span class="stat-label">Reading Time</span>
+      <div class="stats-grid grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div class="stat-card bg-white/20 border-2 border-white/30 rounded-xl p-6 text-center transition hover:shadow-lg">
+          <span class="stat-number text-2xl font-bold block mb-2" id="analysis-reading-time">0:00</span>
+          <span class="stat-label text-sm opacity-80">Reading Time</span>
         </div>
-        
-        <div class="stat-card">
-          <span class="stat-number" id="reading-speed">0</span>
-          <span class="stat-label">Words per Minute</span>
+        <div class="stat-card bg-white/20 border-2 border-white/30 rounded-xl p-6 text-center transition hover:shadow-lg">
+          <span class="stat-number text-2xl font-bold block mb-2" id="reading-speed">0</span>
+          <span class="stat-label text-sm opacity-80">Words per Minute</span>
         </div>
       </div>
-      
-      <div class="analysis-actions">
-        <button class="modal-btn secondary" onclick="closeAnalysis()">Close</button>
-        <button class="modal-btn primary" onclick="restartTeleprompter()">Read Again</button>
+      <div class="analysis-actions flex gap-4 justify-center mt-8">
+        <button class="modal-btn secondary bg-white/20 border-2 border-white/30 text-white px-6 py-2 rounded-full cursor-pointer transition hover:bg-white/40" onclick="closeAnalysis()">Close</button>
+        <button class="modal-btn primary bg-indigo-500 text-white px-6 py-2 rounded-full cursor-pointer transition hover:bg-indigo-700" onclick="restartTeleprompter()">Read Again</button>
       </div>
     </div>
   </div>
@@ -924,12 +270,43 @@
       endTime: null
     };
 
+
+
+    // Mirror mode functions
+    const MIRROR_MODE_KEY = 'teleprompter_mirror_mode';
+    function saveMirrorMode(enabled) {
+      localStorage.setItem(MIRROR_MODE_KEY, enabled ? 'true' : 'false');
+    }
+    function loadMirrorMode() {
+      const saved = localStorage.getItem(MIRROR_MODE_KEY);
+      const mirrorCheckbox = document.getElementById('mirror-mode');
+      const teleprompter = document.getElementById('teleprompter');
+      const enabled = saved === 'true';
+      if (mirrorCheckbox) mirrorCheckbox.checked = enabled;
+      applyMirrorMode(enabled);
+    }
+    function applyMirrorMode(enabled) {
+      const teleprompter = document.getElementById('teleprompter');
+      if (!teleprompter) return;
+      teleprompter.style.transform = enabled ? 'scaleX(-1)' : '';
+    }
+    function updateMirrorMode() {
+      const mirrorCheckbox = document.getElementById('mirror-mode');
+      if (mirrorCheckbox) {
+        saveMirrorMode(mirrorCheckbox.checked);
+        applyMirrorMode(mirrorCheckbox.checked);
+      }
+    }
+
     // Screen navigation
     function showScreen(screenId) {
       document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
+        screen.classList.add('hidden');
+        screen.classList.remove('flex');
       });
-      document.getElementById(screenId + '-screen').classList.add('active');
+      const activeScreen = document.getElementById(screenId + '-screen');
+      activeScreen.classList.remove('hidden');
+      activeScreen.classList.add('flex');
       currentScreen = screenId;
     }
 
@@ -942,6 +319,8 @@
       loadScript();
       loadScrollPosition();
       loadHighlightEnabled();
+      loadFontSize();
+      loadMirrorMode();
       
       // Set up theme toggle if not already done
       const themeToggle = document.getElementById('theme-toggle');
@@ -963,6 +342,28 @@
         scrollSelect.addEventListener('change', updateScrollPosition);
         scrollSelect.setAttribute('data-listener', 'true');
       }
+      // Set up font size selector if not already done
+      const fontSizeSelect = document.getElementById('font-size');
+      if (fontSizeSelect && !fontSizeSelect.hasAttribute('data-listener')) {
+        fontSizeSelect.addEventListener('change', updateFontSize);
+        fontSizeSelect.setAttribute('data-listener', 'true');
+      }
+      // Set up mirror mode selector if not already done
+      const mirrorCheckbox = document.getElementById('mirror-mode');
+      if (mirrorCheckbox && !mirrorCheckbox.hasAttribute('data-listener')) {
+        mirrorCheckbox.addEventListener('change', updateMirrorMode);
+        mirrorCheckbox.setAttribute('data-listener', 'true');
+      }
+      
+      // Check if there's existing analysis data to show the Speech Analysis button
+      const analysisData = localStorage.getItem('teleprompter_analysis');
+      if (analysisData) {
+        const analysisBtn = document.getElementById('speech-analysis-btn');
+        if (analysisBtn) {
+          analysisBtn.style.display = 'inline-block';
+        }
+      }
+      
     }
 
     function showTeleprompter() {
@@ -978,6 +379,48 @@
       const savedScript = localStorage.getItem(STORAGE_KEY);
       if (savedScript) {
         document.getElementById('script-text').value = savedScript;
+      }
+      updateScriptStats();
+    }
+
+    // Script statistics functions
+    function updateScriptStats() {
+      const scriptText = document.getElementById('script-text').value;
+      const words = scriptText.trim() ? scriptText.trim().split(/\s+/).length : 0;
+      const wordCountElement = document.getElementById('word-count');
+      const readingTimeElement = document.getElementById('reading-time');
+      
+      wordCountElement.textContent = `Words: ${words}`;
+      
+      // Calculate reading time (assuming average 150 words per minute)
+      const wordsPerMinute = 150;
+      const minutes = Math.floor(words / wordsPerMinute);
+      const seconds = Math.floor((words % wordsPerMinute) / (wordsPerMinute / 60));
+      const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      readingTimeElement.textContent = `Estimated reading time: ${timeString}`;
+    }
+
+    // Speech analysis functions
+    function showLatestAnalysis() {
+      const analysisData = localStorage.getItem('teleprompter_analysis');
+      if (analysisData) {
+        const data = JSON.parse(analysisData);
+        // Display the saved analysis data directly without recalculating
+        displayAnalysis(data);
+        // Show the modal
+        document.getElementById('analysis-modal').classList.remove('hidden');
+        document.getElementById('analysis-modal').classList.add('flex');
+      } else {
+        alert('No previous analysis available.');
+      }
+    }
+
+    function saveAnalysisData(data) {
+      localStorage.setItem('teleprompter_analysis', JSON.stringify(data));
+      // Show the speech analysis button if we have analysis data
+      const analysisBtn = document.getElementById('speech-analysis-btn');
+      if (analysisBtn) {
+        analysisBtn.style.display = 'inline-block';
       }
     }
 
@@ -995,7 +438,11 @@
     }
 
     function applyTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
       const themeToggle = document.getElementById('theme-toggle');
       if (themeToggle) {
         themeToggle.checked = theme === 'dark';
@@ -1003,8 +450,8 @@
     }
 
     function toggleTheme() {
-      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      const isDark = document.documentElement.classList.contains('dark');
+      const newTheme = isDark ? 'light' : 'dark';
       applyTheme(newTheme);
       saveTheme(newTheme);
     }
@@ -1056,6 +503,31 @@
         if (!highlightToggle.checked) {
           clearHighlights();
         }
+      }
+    }
+
+    // Font size functions
+    const FONT_SIZE_KEY = 'teleprompter_font_size';
+    function saveFontSize(size) {
+      localStorage.setItem(FONT_SIZE_KEY, size);
+    }
+    function loadFontSize() {
+      const saved = localStorage.getItem(FONT_SIZE_KEY) || 'text-3xl';
+      const fontSizeSelect = document.getElementById('font-size');
+      if (fontSizeSelect) fontSizeSelect.value = saved;
+      applyFontSize(saved);
+    }
+    function applyFontSize(size) {
+      const teleprompter = document.getElementById('teleprompter');
+      if (!teleprompter) return;
+      teleprompter.classList.remove('text-2xl', 'text-3xl', 'text-4xl', 'text-5xl');
+      teleprompter.classList.add(size);
+    }
+    function updateFontSize() {
+      const fontSizeSelect = document.getElementById('font-size');
+      if (fontSizeSelect) {
+        saveFontSize(fontSizeSelect.value);
+        applyFontSize(fontSizeSelect.value);
       }
     }
 
@@ -1129,9 +601,16 @@
     function showAnalysis() {
       // Calculate statistics
       const totalTime = speechStats.endTime - speechStats.startTime;
+      console.log('Debug - startTime:', speechStats.startTime);
+      console.log('Debug - endTime:', speechStats.endTime);
+      console.log('Debug - totalTime:', totalTime);
       const minutes = Math.floor(totalTime / 60000);
       const seconds = Math.floor((totalTime % 60000) / 1000);
-      const readingTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      console.log('Debug - calculated minutes:', minutes);
+      console.log('Debug - calculated seconds:', seconds);
+      // Handle very short durations (less than 1 second)
+      const readingTime = totalTime < 1000 ? '0:01' : `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      console.log('Debug - readingTime:', readingTime);
       
       // Calculate correct words as total minus only missed words (mismatched words count as correct)
       speechStats.correctWords = speechStats.totalWords - speechStats.missedWords;
@@ -1139,26 +618,47 @@
       const accuracy = speechStats.totalWords > 0 ? Math.round((speechStats.correctWords / speechStats.totalWords) * 100) : 0;
       const wordsPerMinute = totalTime > 0 ? Math.round((speechStats.totalWords / totalTime) * 60000) : 0;
       
+      // Create analysis data object
+      const analysisData = {
+        totalWords: speechStats.totalWords,
+        correctWords: speechStats.correctWords,
+        missedWords: speechStats.missedWords,
+        accuracy,
+        readingTime,
+        wordsPerMinute,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Save analysis data
+      saveAnalysisData(analysisData);
+      
       // Update modal content
-      document.getElementById('total-words').textContent = speechStats.totalWords;
-      document.getElementById('correct-words').textContent = speechStats.correctWords;
-      document.getElementById('missed-words').textContent = speechStats.missedWords;
-      document.getElementById('reading-time').textContent = readingTime;
-      document.getElementById('reading-speed').textContent = wordsPerMinute;
+      displayAnalysis(analysisData);
+      
+      // Show modal
+      document.getElementById('analysis-modal').classList.remove('hidden');
+      document.getElementById('analysis-modal').classList.add('flex');
+    }
+
+    function displayAnalysis(data) {
+      console.log('Debug - displayAnalysis called with data:', data);
+      document.getElementById('total-words').textContent = data.totalWords;
+      document.getElementById('correct-words').textContent = data.correctWords;
+      document.getElementById('missed-words').textContent = data.missedWords;
+      document.getElementById('analysis-reading-time').textContent = data.readingTime;
+      document.getElementById('reading-speed').textContent = data.wordsPerMinute;
       
       // Update accuracy bar
       const accuracyFill = document.getElementById('accuracy-fill');
       const accuracyText = document.getElementById('accuracy-text');
-      accuracyFill.style.width = accuracy + '%';
-      accuracyText.textContent = accuracy + '%';
-      
-      // Show modal
-      document.getElementById('analysis-modal').classList.add('active');
+      accuracyFill.style.width = data.accuracy + '%';
+      accuracyText.textContent = data.accuracy + '%';
     }
 
     // Close analysis modal
     function closeAnalysis() {
-      document.getElementById('analysis-modal').classList.remove('active');
+      document.getElementById('analysis-modal').classList.add('hidden');
+      document.getElementById('analysis-modal').classList.remove('flex');
     }
 
     // Restart teleprompter
@@ -1276,6 +776,13 @@
       // Update button and highlight first word
       updateStartButton();
       highlightCurrentWord();
+      // Apply font size
+      const fontSize = localStorage.getItem(FONT_SIZE_KEY) || 'text-3xl';
+      container.classList.remove('text-2xl', 'text-3xl', 'text-4xl', 'text-5xl');
+      container.classList.add(fontSize);
+      // Apply mirror mode
+      const mirrorEnabled = localStorage.getItem(MIRROR_MODE_KEY) === 'true';
+      container.style.transform = mirrorEnabled ? 'scaleX(-1)' : '';
     }
 
     // Highlight current word and scroll to it
@@ -1284,14 +791,11 @@
       if (target) {
         // Remove current highlighting from all words
         document.querySelectorAll('#teleprompter span').forEach(s => s.classList.remove('current'));
-        
         // Highlight current word
       target.classList.add('current');
-        
         // Continuously scroll to keep current word centered
         scrollToCurrentWord();
       }
-      
       // Update button state
       updateStartButton();
     }
@@ -1369,20 +873,17 @@
         console.log('Highlighting disabled, skipping missed word marking');
         return; // Skip if highlighting is disabled
       }
-      
       const target = document.getElementById('w' + index);
       if (target) {
         console.log('Marking word as missed:', index, target.textContent);
         target.classList.add('missed');
         target.classList.remove('current');
-        
-        // Force style update
-        target.style.backgroundColor = '#f44336';
-        target.style.color = 'white';
+        // Remove any inline styles
+        target.style.backgroundColor = '';
+        target.style.color = '';
       } else {
         console.log('Could not find target element for word:', index);
       }
-      
       // Update statistics
       speechStats.missedWords++;
     }
@@ -1390,13 +891,13 @@
     // Mark a word as mismatched (no highlight - counts as correct in analytics)
     function markWordAsMismatched(index) {
       if (!highlightEnabled) return; // Skip if highlighting is disabled
-      
       const target = document.getElementById('w' + index);
       if (target) {
         target.classList.add('mismatched');
         target.classList.remove('current');
+        target.style.backgroundColor = '';
+        target.style.color = '';
       }
-      
       // Update statistics (tracked but counted as correct words in analytics)
       speechStats.mismatchedWords++;
     }
@@ -1426,6 +927,11 @@
         if (normalizedSpoken === normalizedExpected) {
           // Word matches current position! Move to next word
           currentWordIndex++;
+          if (currentWordIndex >= words.length) {
+            stopRecognition();
+            showAnalysis();
+            return;
+          }
           if (currentWordIndex < words.length) {
             highlightCurrentWord();
           }
@@ -1518,6 +1024,11 @@
       isListening = false;
       stopContinuousScrolling();
       
+      // Set end time if not already set
+      if (speechStats.endTime === null) {
+        speechStats.endTime = new Date();
+      }
+      
       // Update button state
       updateStartButton();
     }
@@ -1551,6 +1062,10 @@
       recognition.onend = () => {
         isListening = false;
         stopContinuousScrolling();
+        // Set end time if not already set
+        if (speechStats.endTime === null) {
+          speechStats.endTime = new Date();
+        }
         updateStartButton();
       };
 
@@ -1596,23 +1111,46 @@
     // Event listeners
     document.getElementById('startBtn').addEventListener('click', toggleRecognition);
 
-    // Initialize app on page load
+    // Script textarea event listener for real-time stats
     document.addEventListener('DOMContentLoaded', () => {
-      loadScript();
+      const scriptTextarea = document.getElementById('script-text');
+      if (scriptTextarea) {
+        scriptTextarea.addEventListener('input', updateScriptStats);
+      }
+    });
+
+    // Advanced settings navigation
+    document.addEventListener('DOMContentLoaded', () => {
+      const advToggle = document.getElementById('advanced-settings-toggle');
+      if (advToggle) {
+        advToggle.addEventListener('click', () => {
+          showScreen('advanced-settings');
+        });
+      }
+      // Reset to Defaults button
+      const resetBtn = document.getElementById('reset-defaults');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Remove all relevant keys from localStorage
+          localStorage.removeItem('teleprompter_theme');
+          localStorage.removeItem('teleprompter_font_size');
+          localStorage.removeItem('teleprompter_scroll_position');
+          localStorage.removeItem('teleprompter_highlight_enabled');
+          localStorage.removeItem('teleprompter_mirror_mode');
+
+          // Add more keys as needed for new settings
+          // Reset UI to defaults
+          loadFontSize();
       loadScrollPosition();
       loadHighlightEnabled();
-      
-      // Initialize theme
-      const savedTheme = getSavedTheme();
-      applyTheme(savedTheme);
-      
-      // Listen for system theme changes
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        // Only auto-update if user hasn't manually set a preference
-        if (!localStorage.getItem(THEME_KEY)) {
-          applyTheme(e.matches ? 'dark' : 'light');
-        }
-      });
+          loadMirrorMode();
+
+          applyTheme(getSystemTheme());
+          // Optionally show a confirmation
+          alert('Settings have been reset to defaults.');
+        });
+      }
     });
   </script>
 </body>
