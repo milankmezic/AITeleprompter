@@ -73,6 +73,35 @@
       .dot[style*="background"] {
         background-color: white !important;
       }
+      
+      /* Click-to-speak word styling */
+      #teleprompter span[id^="w"] {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        border-radius: 4px;
+        padding: 2px 4px;
+        margin: 1px;
+      }
+      
+      #teleprompter span[id^="w"]:hover {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+        transform: scale(1.05);
+      }
+      
+      #teleprompter span[id^="w"]:active {
+        background-color: rgba(59, 130, 246, 0.2) !important;
+        transform: scale(0.98);
+      }
+      
+      /* Success message styling */
+      .success-message {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-400 to-purple-600 dark:from-gray-900 dark:to-gray-800 text-white dark:text-white min-h-screen overflow-hidden transition-colors duration-300">
@@ -96,6 +125,12 @@
       <div class="settings-content flex flex-col gap-6 flex-1 mb-8">
         <div class="form-group flex-1 flex flex-col">
           <label for="script-text" class="mb-2 text-base font-medium">Your Script:</label>
+          <div class="mb-4 flex gap-2">
+            <input type="url" id="script-url" placeholder="Enter URL, file path, or local file..." class="flex-1 px-3 py-2 rounded-lg bg-white/90 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+            <button id="load-url-btn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition text-sm">Load URL</button>
+            <input type="file" id="script-file" accept=".txt,.md,.doc,.docx" class="hidden" />
+            <button id="load-file-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm">Load File</button>
+          </div>
           <textarea id="script-text" placeholder="Enter your script here... The teleprompter will follow your speech and highlight words as you speak them." class="min-h-[300px] p-4 rounded-lg bg-white/90 text-gray-800 text-base resize-none font-sans focus:outline-none focus:ring-2 focus:ring-indigo-300"></textarea>
           <div id="script-stats" class="mt-2 text-sm text-white/80 flex gap-4">
             <span id="word-count">Words: 0</span>
@@ -321,12 +356,16 @@
       loadHighlightEnabled();
       loadFontSize();
       loadMirrorMode();
+      loadTheme();
       
       // Set up theme toggle if not already done
       const themeToggle = document.getElementById('theme-toggle');
       if (themeToggle && !themeToggle.hasAttribute('data-listener')) {
         themeToggle.addEventListener('change', toggleTheme);
         themeToggle.setAttribute('data-listener', 'true');
+        // Ensure the toggle reflects the current theme
+        const currentTheme = localStorage.getItem(THEME_KEY) || 'light';
+        themeToggle.checked = currentTheme === 'dark';
       }
       
       // Set up highlight toggle if not already done
@@ -400,6 +439,125 @@
       readingTimeElement.textContent = `Estimated reading time: ${timeString}`;
     }
 
+    // URL loading functions
+    async function loadScriptFromURL(url) {
+      try {
+        // Show loading state
+        const loadBtn = document.getElementById('load-url-btn');
+        const originalText = loadBtn.textContent;
+        loadBtn.textContent = 'Loading...';
+        loadBtn.disabled = true;
+        
+        let content;
+        
+        // Handle different URL types
+        if (url.startsWith('file://') || url.startsWith('http://') || url.startsWith('https://')) {
+          // Try to fetch from web URL or local file
+          try {
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            content = await response.text();
+          } catch (corsError) {
+            // CORS error - provide alternative solutions
+            if (corsError.message.includes('CORS') || corsError.message.includes('blocked')) {
+              throw new Error(`CORS blocked: ${url}. Try using a CORS proxy or hosting the file on a server with CORS headers.`);
+            }
+            throw corsError;
+          }
+        } else {
+          // Handle local file path (relative or absolute)
+          try {
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`File not found: ${url}`);
+            }
+            content = await response.text();
+          } catch (localError) {
+            // If local fetch fails, try as a relative path
+            try {
+              const relativeUrl = url.startsWith('/') ? url : `/${url}`;
+              const response = await fetch(relativeUrl);
+              if (!response.ok) {
+                throw new Error(`File not found: ${url}`);
+              }
+              content = await response.text();
+            } catch (finalError) {
+              throw new Error(`File not found: ${url}. Make sure the file exists and is accessible.`);
+            }
+          }
+        }
+        
+        // Load the content into the textarea
+        document.getElementById('script-text').value = content;
+        
+        // Update stats
+        updateScriptStats();
+        
+        // Save to local storage
+        saveScript(content);
+        
+        // Show success message
+        showSuccess('Script loaded successfully!');
+        
+      } catch (error) {
+        // Provide helpful error message with solutions
+        if (error.message.includes('CORS')) {
+          showError(`CORS Error: ${error.message}
+
+Solutions:
+1. Use a CORS proxy: https://cors-anywhere.herokuapp.com/your-url
+2. Host the file on a server with CORS headers
+3. Use a local file instead
+4. Copy the content directly into the textarea`);
+        } else {
+          showError(`Failed to load script: ${error.message}`);
+        }
+      } finally {
+        // Reset button state
+        const loadBtn = document.getElementById('load-url-btn');
+        loadBtn.textContent = 'Load URL';
+        loadBtn.disabled = false;
+      }
+    }
+
+    function showSuccess(message) {
+      const errorContainer = document.getElementById('error-container');
+      errorContainer.innerHTML = `<div class="success-message text-green-300 bg-green-900/20 border border-green-500/30 rounded-lg px-4 py-2 mb-4">${message}</div>`;
+      setTimeout(() => {
+        errorContainer.innerHTML = '';
+      }, 3000);
+    }
+
+    // File loading function (no CORS issues)
+    function loadScriptFromFile(file) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const content = e.target.result;
+        
+        // Load the content into the textarea
+        document.getElementById('script-text').value = content;
+        
+        // Update stats
+        updateScriptStats();
+        
+        // Save to local storage
+        saveScript(content);
+        
+        // Show success message
+        showSuccess(`Script loaded successfully from file: ${file.name}`);
+      };
+      
+      reader.onerror = function() {
+        showError('Failed to read the file. Please try again.');
+      };
+      
+      // Read the file as text
+      reader.readAsText(file);
+    }
+
     // Speech analysis functions
     function showLatestAnalysis() {
       const analysisData = localStorage.getItem('teleprompter_analysis');
@@ -435,6 +593,17 @@
 
     function saveTheme(theme) {
       localStorage.setItem(THEME_KEY, theme);
+    }
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme) {
+        applyTheme(savedTheme);
+      } else {
+        // Default to system preference or light theme
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(prefersDark ? 'dark' : 'light');
+      }
     }
 
     function applyTheme(theme) {
@@ -487,7 +656,6 @@
     function loadHighlightEnabled() {
       const saved = localStorage.getItem(HIGHLIGHT_KEY);
       highlightEnabled = saved === null ? true : saved === 'true';
-      console.log('Highlight enabled:', highlightEnabled);
       const highlightToggle = document.getElementById('highlight-toggle');
       if (highlightToggle) {
         highlightToggle.checked = highlightEnabled;
@@ -601,16 +769,10 @@
     function showAnalysis() {
       // Calculate statistics
       const totalTime = speechStats.endTime - speechStats.startTime;
-      console.log('Debug - startTime:', speechStats.startTime);
-      console.log('Debug - endTime:', speechStats.endTime);
-      console.log('Debug - totalTime:', totalTime);
       const minutes = Math.floor(totalTime / 60000);
       const seconds = Math.floor((totalTime % 60000) / 1000);
-      console.log('Debug - calculated minutes:', minutes);
-      console.log('Debug - calculated seconds:', seconds);
       // Handle very short durations (less than 1 second)
       const readingTime = totalTime < 1000 ? '0:01' : `${minutes}:${seconds.toString().padStart(2, '0')}`;
-      console.log('Debug - readingTime:', readingTime);
       
       // Calculate correct words as total minus only missed words (mismatched words count as correct)
       speechStats.correctWords = speechStats.totalWords - speechStats.missedWords;
@@ -641,7 +803,6 @@
     }
 
     function displayAnalysis(data) {
-      console.log('Debug - displayAnalysis called with data:', data);
       document.getElementById('total-words').textContent = data.totalWords;
       document.getElementById('correct-words').textContent = data.correctWords;
       document.getElementById('missed-words').textContent = data.missedWords;
@@ -679,6 +840,46 @@
       // Update button and highlight first word
       updateStartButton();
       highlightCurrentWord();
+    }
+
+    // Speech synthesis for click-to-speak functionality
+    function speakWord(word) {
+      if ('speechSynthesis' in window) {
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+        
+        // Create a new speech utterance
+        const utterance = new SpeechSynthesisUtterance(word);
+        
+        // Configure speech settings
+        utterance.rate = 0.8; // Slightly slower for clarity
+        utterance.pitch = 1.0; // Normal pitch
+        utterance.volume = 0.8; // Good volume
+        
+        // Get the current language setting or default to English
+        const languageSelect = document.getElementById('language-select');
+        if (languageSelect) {
+          utterance.lang = languageSelect.value || 'en-US';
+        } else {
+          utterance.lang = 'en-US';
+        }
+        
+        // Speak the word
+        speechSynthesis.speak(utterance);
+        
+        // Optional: Add visual feedback
+        const clickedSpan = event.target;
+        if (clickedSpan) {
+          clickedSpan.style.backgroundColor = '#3b82f6'; // Blue highlight
+          clickedSpan.style.color = 'white';
+          setTimeout(() => {
+            clickedSpan.style.backgroundColor = '';
+            clickedSpan.style.color = '';
+          }, 500);
+        }
+      } else {
+        // Speech synthesis not supported
+      }
     }
 
     // Error handling
@@ -755,7 +956,20 @@
         }
       }
       
-      container.innerHTML = processedHTML;
+      // Add a full page of blank space at the end to ensure scrolling always works
+      const viewportHeight = window.innerHeight;
+      const blankSpaceHeight = viewportHeight * 1.5; // 1.5x viewport height for extra space
+      const blankSpace = `<div style="height: ${blankSpaceHeight}px;"></div>`;
+      
+      container.innerHTML = processedHTML + blankSpace;
+      
+      // Add click-to-speak functionality to all word spans
+      document.querySelectorAll('#teleprompter span[id^="w"]').forEach(span => {
+        span.style.cursor = 'pointer';
+        span.addEventListener('click', function() {
+          speakWord(this.textContent);
+        });
+      });
 
       // Clear any existing highlighting classes
       document.querySelectorAll('#teleprompter span').forEach(s => {
@@ -1113,11 +1327,97 @@
 
     // Script textarea event listener for real-time stats
     document.addEventListener('DOMContentLoaded', () => {
+      // Load saved theme on page load
+      loadTheme();
+      
       const scriptTextarea = document.getElementById('script-text');
       if (scriptTextarea) {
-        scriptTextarea.addEventListener('input', updateScriptStats);
+        scriptTextarea.addEventListener('input', () => {
+          updateScriptStats();
+          // Save script to localStorage as user types
+          localStorage.setItem(STORAGE_KEY, scriptTextarea.value);
+        });
       }
+      
+      // Load URL button event listener
+      const loadUrlBtn = document.getElementById('load-url-btn');
+      if (loadUrlBtn) {
+        loadUrlBtn.addEventListener('click', () => {
+          const urlInput = document.getElementById('script-url');
+          const url = urlInput.value.trim();
+          
+          if (!url) {
+            showError('Please enter a valid URL or file path');
+            return;
+          }
+          
+          // Load the script
+          loadScriptFromURL(url);
+          // Save the URL to localStorage
+          localStorage.setItem('teleprompter_url', url);
+        });
+      }
+      
+      // Allow Enter key to trigger URL loading and save URL to localStorage
+      const urlInput = document.getElementById('script-url');
+      if (urlInput) {
+        // Load saved URL
+        const savedUrl = localStorage.getItem('teleprompter_url');
+        if (savedUrl) {
+          urlInput.value = savedUrl;
+        }
+        
+        urlInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            document.getElementById('load-url-btn').click();
+          }
+        });
+        
+        // Save URL to localStorage as user types
+        urlInput.addEventListener('input', () => {
+          localStorage.setItem('teleprompter_url', urlInput.value);
+        });
+      }
+      
+      // File loading functionality
+      const loadFileBtn = document.getElementById('load-file-btn');
+      const fileInput = document.getElementById('script-file');
+      
+      if (loadFileBtn && fileInput) {
+        loadFileBtn.addEventListener('click', () => {
+          fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            loadScriptFromFile(file);
+          }
+        });
+      }
+      
+      // Check for script parameter in URL and auto-load
+      checkForScriptParameter();
     });
+
+    // Check URL parameters for automatic script loading
+    function checkForScriptParameter() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const scriptUrl = urlParams.get('script');
+      
+      if (scriptUrl) {
+        // Auto-load the script from the URL parameter
+        loadScriptFromURL(scriptUrl);
+        
+        // Update the URL input field to show what was loaded
+        const urlInput = document.getElementById('script-url');
+        if (urlInput) {
+          urlInput.value = scriptUrl;
+          // Save the URL to localStorage
+          localStorage.setItem('teleprompter_url', scriptUrl);
+        }
+      }
+    }
 
     // Advanced settings navigation
     document.addEventListener('DOMContentLoaded', () => {
@@ -1138,6 +1438,7 @@
           localStorage.removeItem('teleprompter_scroll_position');
           localStorage.removeItem('teleprompter_highlight_enabled');
           localStorage.removeItem('teleprompter_mirror_mode');
+          localStorage.removeItem('teleprompter_url');
 
           // Add more keys as needed for new settings
           // Reset UI to defaults

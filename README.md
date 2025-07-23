@@ -47,8 +47,15 @@ A modern, intelligent teleprompter application that uses AI-powered speech recog
 - **Modern UI**: Clean interface with Tailwind CSS styling
 - **Toggle Switches**: Professional toggle controls for settings
 - **Streamlined Layout**: Optimized settings organization
+- **Interactive Words**: Click any word to hear pronunciation
+- **External Script Loading**: Load from URLs, files, or local paths
+- **CORS-Safe Operations**: Multiple loading methods for any environment
 
 ## 🚀 Getting Started
+
+### 🌐 **Try It Online**
+**Test the AI Teleprompter instantly in your browser:**
+[https://raw.githack.com/milankmezic/AITeleprompter/main/index.html](https://raw.githack.com/milankmezic/AITeleprompter/main/index.html)
 
 ### Prerequisites
 - Modern web browser with Web Speech API support (Chrome, Edge, Safari)
@@ -135,7 +142,33 @@ AITeleprompter/
 
 ## 📋 Version History
 
-### v2.0.0 - Enhanced UI & Analytics (Current)
+### v2.1.0 - Interactive Features & External Scripts (Current)
+**Release Date**: July 2025
+
+#### ✨ New Features
+- **Click-to-Speak Functionality**: Click any word to hear it pronounced using Web Speech API
+- **External URL Loading**: Load scripts from URLs, local files, and file paths
+- **File Upload Support**: Direct file upload with support for .txt, .md, .doc, .docx formats
+- **CORS-Safe Loading**: Multiple loading methods to bypass CORS restrictions
+- **URL Parameter Auto-loading**: Automatically load scripts from URL parameters (?script=)
+- **Enhanced Scroll Support**: Added blank space to ensure scrolling works with short scripts
+- **Visual Word Feedback**: Hover and click effects for interactive words
+- **Speech Synthesis**: Configurable speech rate, pitch, and volume for pronunciation
+
+#### 🔧 Improvements
+- **CORS Error Handling**: Comprehensive error messages with solutions for CORS issues
+- **File Loading UX**: Drag-and-drop style file selection with visual feedback
+- **URL Validation**: Flexible URL validation supporting local and remote sources
+- **Loading States**: Visual feedback during file/URL loading operations
+- **Success/Error Messages**: Enhanced user feedback with styled notifications
+
+#### 🐛 Bug Fixes
+- Fixed scrolling issues with short scripts by adding blank space
+- Resolved CORS blocking issues with external URL loading
+- Improved error handling for network failures and file not found scenarios
+- Enhanced speech recognition timing precision
+
+### v2.0.0 - Enhanced UI & Analytics
 **Release Date**: July 2025
 
 #### ✨ New Features
@@ -216,10 +249,13 @@ This project is licensed under the GNU AFFERO GENERAL  - see the [LICENSE](LICEN
 - [x] **Enhanced Analytics** - Improved performance metrics and timing precision ✅
 - [x] **Modern UI** - Professional styling with Tailwind CSS ✅
 - [x] **Advanced Settings** - Organized settings management ✅
-- [ ] **External Script Loading** - Load scripts from URLs or external sources
+- [x] **External Script Loading** - Load scripts from URLs, files, and local paths ✅
+- [x] **Interactive Features** - Click-to-speak and word pronunciation ✅
+- [x] **CORS-Safe Operations** - Multiple loading methods for any environment ✅
 - [ ] **Multi-language Support** - Support for different speech recognition languages
 - [ ] **Export Functionality** - Export analysis results and scripts
 - [ ] **Audio Cue Support** - Audio feedback for performance milestones
+- [ ] **Collaborative Features** - Real-time script sharing and editing
 
 ## 🐛 Bug Reports
 
