@@ -26,3 +26,6 @@ node_modules/
 .idea/
 *.sublime-project
 *.sublime-workspace 
+
+# Ignore instructions.txt
+instructions.txt 
