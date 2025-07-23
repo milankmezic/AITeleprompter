@@ -1,0 +1,102 @@
+Generic Web App UI Design Instructions
+====================================
+
+This document describes the design and UI structure for a modern web application, including the splash screen, main screen, and result (analysis) screen. It also covers light/dark mode, background colors, and button styles. Use these guidelines to create a similar look and feel in your projects.
+
+---
+
+1. Splash Screen
+----------------
+- **Layout:**
+  - Centered vertically and horizontally (flexbox).
+  - Large logo/title at the top, bold, with drop shadow.
+  - Subtitle below the logo.
+  - Prominent primary action button below the subtitle (e.g., "Get Started").
+  - Optional: Link or call-to-action at the bottom center.
+- **Colors:**
+  - Background: Gradient (e.g., indigo to purple in light mode, gray gradients in dark mode).
+  - Text: White in both modes.
+- **Button Style:**
+  - Rounded-full, large padding, border, semi-transparent background.
+  - Hover: White background, accent text, shadow effect.
+  - Dark mode: Slightly more transparent backgrounds.
+
+2. Main Screen
+--------------
+- **Layout:**
+  - Centered container with rounded corners, padding, and backdrop blur.
+  - Title and subtitle at the top.
+  - Main content area for user interaction (e.g., forms, settings, or content input).
+  - Button group for navigation and primary actions.
+  - Optional: Advanced settings toggle at the bottom.
+- **Colors:**
+  - Container: Semi-transparent white (light mode) or more transparent in dark mode.
+  - Borders: Subtle, white with low opacity.
+  - Text: White in both modes, input fields use dark text on light backgrounds.
+- **Button Style:**
+  - Consistent with splash screen: rounded, border, hover effects.
+  - Primary actions use more prominent backgrounds (e.g., accent color).
+- **Inputs:**
+  - Rounded, subtle focus ring (accent color).
+  - File and URL inputs styled for clarity if present.
+
+3. Advanced Settings (Optional)
+-------------------------------
+- **Options:**
+  - Dark mode toggle (switch style).
+  - Font size selector (dropdown).
+  - Layout or display options as needed for your app.
+  - Reset to defaults button (red, rounded).
+- **Switches:**
+  - Custom toggle switches with animated dot and color change.
+
+4. Result/Analysis Screen (Modal)
+---------------------------------
+- **Layout:**
+  - Modal overlay: dark, semi-transparent background with blur.
+  - Centered card with rounded corners, padding, and border.
+  - Title, subtitle, and stats or summary grid.
+  - Progress or accuracy bar if relevant.
+  - Action buttons: Close, Repeat, or other context-appropriate actions.
+- **Colors:**
+  - Modal: Semi-transparent white (light/dark), white text.
+  - Stat cards: Slightly more opaque backgrounds, border, hover shadow.
+  - Buttons: Consistent with other screens.
+
+5. Light/Dark Mode
+------------------
+- **Implementation:**
+  - Use a CSS framework (e.g., TailwindCSS) with class-based dark mode.
+  - Theme toggle in settings or advanced options.
+  - Save preference to localStorage; default to system preference.
+- **Colors:**
+  - Light mode: Accent gradients, white containers, dark text in inputs.
+  - Dark mode: Gray gradients, more transparent containers, white text.
+
+6. General Styles
+-----------------
+- **Buttons:**
+  - Rounded-full, border, transition on hover.
+  - Primary: Accent backgrounds.
+  - Secondary: Transparent/white backgrounds.
+- **Inputs:**
+  - Rounded, subtle focus ring, light backgrounds.
+- **Containers:**
+  - Rounded-2xl, semi-transparent, backdrop-blur, subtle border.
+- **Typography:**
+  - Sans-serif, large headings, readable body text.
+- **Animations:**
+  - Fade-in for success messages.
+  - Smooth transitions for theme/background changes.
+
+---
+
+**To replicate this design:**
+- Use a utility-first CSS framework (e.g., TailwindCSS) for responsive design.
+- Implement screen navigation by showing/hiding divs with unique IDs or using a router.
+- Use localStorage for theme and settings persistence.
+- Use flexbox for centering and layout.
+- Use modals for result/analysis overlays.
+- Use custom CSS for toggle switches and interactive elements.
+
+Adjust colors, spacing, and content as needed for your brand or project. 
