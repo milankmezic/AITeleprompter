@@ -51,6 +51,9 @@ A modern, intelligent teleprompter application that uses AI-powered speech recog
 - **External Script Loading**: Load from URLs, files, or local paths
 - **CORS-Safe Operations**: Multiple loading methods for any environment
 
+## Support us - become a sponsor
+- https://github.com/sponsors/milankmezic
+
 ## 🚀 Getting Started
 
 ### 🌐 **Try It Online**
